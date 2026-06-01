@@ -1,12 +1,13 @@
 import { applyMotionStyle, popIn, scanAnim, slideUp } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, glowGradient, spx } from '../shared/cardLayout';
+import { getCardShellStyle, glowGradient, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function MissionFailed({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('mission-failed', fields);
+  const layout = useCardLayout('mission-failed', fields);
   const s = layout.contentScale;
   const cross = getField(fields, 'cross', '✕');
   const titleAccent = getField(fields, 'titleAccent', 'MISSION');
@@ -19,8 +20,7 @@ export function MissionFailed({ fields, theme = shadowOwnerTheme, globalSpeed = 
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          height: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'linear-gradient(135deg, #100404 0%, #0a0202 100%)',
           border: stripCardBackground ? 'none' : '1px solid #380e0e',
           display: 'flex',

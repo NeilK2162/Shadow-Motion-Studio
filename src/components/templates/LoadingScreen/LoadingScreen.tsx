@@ -1,7 +1,8 @@
 import { applyMotionStyle, counterUp, lFill, slideUp2 } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 function SkylineSvg({ bottom }: { bottom: number }) {
@@ -39,7 +40,7 @@ function SkylineSvg({ bottom }: { bottom: number }) {
 
 export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('loading-screen', fields);
+  const layout = useCardLayout('loading-screen', fields);
   const s = layout.contentScale;
   const bigText = getField(fields, 'bigText', 'HYDERABAD');
   const barLabel = getField(fields, 'barLabel', 'Loading');
@@ -51,8 +52,7 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          height: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : '#000',
           position: 'relative',
           overflow: 'hidden',

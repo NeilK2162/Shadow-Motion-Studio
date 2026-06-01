@@ -1,7 +1,8 @@
 import { applyMotionStyle, impactZoom, shake, slideUp, vignettePulse } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, glowGradient, spx } from '../shared/cardLayout';
+import { getCardShellStyle, glowGradient, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function Wasted({
@@ -12,7 +13,7 @@ export function Wasted({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('wasted', fields, formatId);
+  const layout = useCardLayout('wasted', fields, formatId);
   const s = layout.contentScale;
   const bigText = getField(fields, 'bigText', 'WASTED');
   const sub = getField(fields, 'sub', '');
@@ -24,7 +25,7 @@ export function Wasted({
   });
 
   return (
-    <div style={{ ...themeVars(theme), width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ ...themeVars(theme), ...getCardShellStyle(layout, { bleed: true }) }}>
       {!stripCardBackground && (
         <div
           style={{

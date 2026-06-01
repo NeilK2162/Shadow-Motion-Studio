@@ -41,9 +41,12 @@ export function placementStyle(placement: Placement, format: FormatPreset): CSSP
     return {
       position: 'absolute',
       inset: 0,
+      width: '100%',
+      height: '100%',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'stretch',
-      justifyContent: 'stretch',
+      justifyContent: 'flex-start',
     };
   }
 

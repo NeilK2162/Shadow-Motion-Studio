@@ -1,7 +1,8 @@
 import { applyMotionStyle, impactZoom, popIn } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, glowGradient, spx } from '../shared/cardLayout';
+import { getCardShellStyle, glowGradient, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function Countdown({
@@ -12,7 +13,7 @@ export function Countdown({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('countdown', fields, formatId);
+  const layout = useCardLayout('countdown', fields, formatId);
   const s = layout.contentScale;
   const from = getField(fields, 'from', 3);
   const goText = getField(fields, 'goText', 'GO');
@@ -33,8 +34,7 @@ export function Countdown({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          height: layout.cardHeight,
+          ...getCardShellStyle(layout),
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -42,7 +42,7 @@ export function Countdown({
           position: 'relative',
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.85)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
-          borderRadius: '50%',
+          borderRadius: layout.isFullscreen ? 0 : '50%',
         }}
       >
         {!stripCardBackground && layout.hasGlow && (

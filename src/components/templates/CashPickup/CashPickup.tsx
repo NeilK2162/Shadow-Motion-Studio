@@ -1,7 +1,8 @@
 import { applyMotionStyle, counterUp, flashIn, slideDown, slideUp } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function CashPickup({
@@ -12,7 +13,7 @@ export function CashPickup({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('cash-pickup', fields, formatId);
+  const layout = useCardLayout('cash-pickup', fields, formatId);
   const s = layout.contentScale;
   const amountPrefix = getField(fields, 'amountPrefix', '₹');
   const amount = getField(fields, 'amount', 50000);
@@ -25,8 +26,7 @@ export function CashPickup({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.94)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           padding: spx(16, s),

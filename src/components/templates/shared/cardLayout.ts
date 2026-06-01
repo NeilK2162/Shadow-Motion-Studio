@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import type { FormatId } from '@/lib/formats';
 import type { Placement } from '@/lib/placement';
 import type { TemplateId } from '@/types';
@@ -15,6 +16,13 @@ export interface CardLayout {
   hasGlow: boolean;
   autoHeight: boolean;
   defaultPlacement: Placement;
+  isFullscreen: boolean;
+}
+
+export interface LayoutOptions {
+  placement?: Placement;
+  canvasWidth?: number;
+  canvasHeight?: number;
 }
 
 export interface TemplateBaseSize {
@@ -102,18 +110,34 @@ export function getCardLayout(
   templateId: TemplateId,
   fields: Record<string, unknown>,
   formatId?: FormatId,
+  options?: LayoutOptions,
 ): CardLayout {
   const base = TEMPLATE_BASE_SIZES[templateId];
   const sizeMultiplier = resolveSizeMultiplier(templateId, fields, formatId);
   const aspectMultiplier = getField(fields, 'aspectMultiplier', DEFAULT_LAYOUT_FIELDS.aspectMultiplier);
   const contentScaleRaw = getField(fields, 'contentScale', DEFAULT_LAYOUT_FIELDS.contentScale);
-  const contentScale = contentScaleRaw > 0 ? contentScaleRaw : sizeMultiplier;
+  const placement = options?.placement ?? 'center';
+  const canvasWidth = options?.canvasWidth;
+  const canvasHeight = options?.canvasHeight;
+  const isFullscreen = placement === 'fullscreen' && !!canvasWidth && !!canvasHeight;
 
   let cardWidth = Math.round(base.width * sizeMultiplier);
   let cardHeight = Math.round(base.height * sizeMultiplier * aspectMultiplier);
+  let contentScale = contentScaleRaw > 0 ? contentScaleRaw : sizeMultiplier;
+  let autoHeight = base.autoHeight ?? false;
 
   if (fields.cardHeight !== undefined && fields.sizeMultiplier === undefined && fields.aspectMultiplier === undefined) {
     cardHeight = Number(fields.cardHeight);
+  }
+
+  if (isFullscreen && canvasWidth && canvasHeight) {
+    cardWidth = canvasWidth;
+    cardHeight = canvasHeight;
+    autoHeight = false;
+    const wScale = canvasWidth / base.width;
+    const hScale = canvasHeight / base.height;
+    const fillScale = Math.min(wScale, hScale) * sizeMultiplier;
+    contentScale = contentScaleRaw > 0 ? contentScaleRaw : fillScale;
   }
 
   return {
@@ -126,9 +150,39 @@ export function getCardLayout(
     glowSpread: getField(fields, 'glowSpread', DEFAULT_LAYOUT_FIELDS.glowSpread),
     glowCenterY: getField(fields, 'glowCenterY', DEFAULT_LAYOUT_FIELDS.glowCenterY),
     hasGlow: base.hasGlow ?? false,
-    autoHeight: base.autoHeight ?? false,
+    autoHeight,
     defaultPlacement: base.defaultPlacement ?? 'center',
+    isFullscreen,
   };
+}
+
+/** Root card box dimensions — uses fixed height in fullscreen so content fills the canvas. */
+export function getCardShellStyle(layout: CardLayout, options?: { bleed?: boolean }): CSSProperties {
+  const shell: CSSProperties =
+    layout.isFullscreen || !layout.autoHeight
+      ? { width: layout.cardWidth, height: layout.cardHeight }
+      : { width: layout.cardWidth, minHeight: layout.cardHeight };
+
+  if (layout.isFullscreen) {
+    const base: CSSProperties = {
+      ...shell,
+      flex: 1,
+      alignSelf: 'stretch',
+      boxSizing: 'border-box',
+    };
+    if (options?.bleed) {
+      return { ...base, position: 'relative', overflow: 'hidden' };
+    }
+    return {
+      ...base,
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+    };
+  }
+
+  return shell;
 }
 
 export function glowGradient(rgb: string, layout: CardLayout): string {

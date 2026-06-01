@@ -1,7 +1,8 @@
 import { applyMotionStyle, flashIn, popIn, pulse, slideUp, slideUp2 } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function SubscribePrompt({
@@ -12,7 +13,7 @@ export function SubscribePrompt({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('subscribe-prompt', fields, formatId);
+  const layout = useCardLayout('subscribe-prompt', fields, formatId);
   const s = layout.contentScale;
   const headline = getField(fields, 'headline', 'NEW OBJECTIVE');
   const action = getField(fields, 'action', 'SUBSCRIBE');
@@ -25,8 +26,7 @@ export function SubscribePrompt({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : theme.dark0,
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           borderLeft: stripCardBackground ? 'none' : `${spx(4, s)}px solid ${theme.gold}`,

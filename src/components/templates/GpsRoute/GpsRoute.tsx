@@ -1,7 +1,8 @@
 import { applyMotionStyle, fadeL, pulse, radarSweep, slideInLeft } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function GpsRoute({
@@ -12,7 +13,7 @@ export function GpsRoute({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('gps-route', fields, formatId);
+  const layout = useCardLayout('gps-route', fields, formatId);
   const s = layout.contentScale;
   const gtag = getField(fields, 'gtag', 'ROUTE SET');
   const dest = getField(fields, 'dest', '');
@@ -24,8 +25,7 @@ export function GpsRoute({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(5,5,5,0.92)',
           borderTop: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           borderBottom: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,

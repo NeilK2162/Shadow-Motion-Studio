@@ -1,7 +1,8 @@
 import { applyMotionStyle, fadeL, slideUp2 } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 function EqBars({ time, scale, theme }: { time: number; scale: number; theme: typeof shadowOwnerTheme }) {
@@ -34,7 +35,7 @@ export function NowPlaying({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('now-playing', fields, formatId);
+  const layout = useCardLayout('now-playing', fields, formatId);
   const s = layout.contentScale;
   const station = getField(fields, 'station', 'SHADOW FM 101.1');
   const track = getField(fields, 'track', '');
@@ -44,8 +45,7 @@ export function NowPlaying({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.92)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           borderRadius: spx(4, s),

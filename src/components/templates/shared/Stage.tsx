@@ -9,5 +9,28 @@ interface StageProps {
 }
 
 export function Stage({ format, placement, children }: StageProps) {
-  return <div style={placementStyle(placement, format)}>{children}</div>;
+  const style = placementStyle(placement, format);
+
+  if (placement === 'fullscreen') {
+    return (
+      <div style={style}>
+        <div
+          style={{
+            flex: 1,
+            width: '100%',
+            height: '100%',
+            minWidth: 0,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'stretch',
+          }}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  }
+
+  return <div style={style}>{children}</div>;
 }

@@ -1,12 +1,13 @@
 import { applyMotionStyle, pulse, slideUp2 } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function EnterLocation({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('enter-location', fields);
+  const layout = useCardLayout('enter-location', fields);
   const s = layout.contentScale;
   const eltag = getField(fields, 'eltag', 'Now Entering');
   const lname = getField(fields, 'lname', '');
@@ -16,8 +17,7 @@ export function EnterLocation({ fields, theme = shadowOwnerTheme, globalSpeed = 
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(5,5,5,0.92)',
           borderTop: stripCardBackground ? 'none' : `1px solid ${theme.dark5}`,
           borderBottom: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,

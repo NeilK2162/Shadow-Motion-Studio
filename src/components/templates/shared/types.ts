@@ -1,4 +1,5 @@
 import type { FormatId } from '@/lib/formats';
+import type { Placement } from '@/lib/placement';
 import type { ThemeTokens } from '@/themes/tokens';
 
 export interface TemplateComponentProps {
@@ -7,6 +8,9 @@ export interface TemplateComponentProps {
   globalSpeed?: number;
   stripCardBackground?: boolean;
   formatId?: FormatId;
+  placement?: Placement;
+  canvasWidth?: number;
+  canvasHeight?: number;
 }
 
 export function getField<T>(fields: Record<string, unknown>, key: string, fallback: T): T {

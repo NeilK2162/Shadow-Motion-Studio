@@ -1,6 +1,7 @@
 import { CardStage } from '@/components/templates/shared/CardStage';
 import { Stage } from '@/components/templates/shared/Stage';
 import { TEMPLATE_COMPONENTS } from '@/components/templates';
+import { TemplateLayoutContext } from '@/hooks/useCardLayout';
 import { getFormat } from '@/lib/formats';
 import { safeAreaStyle } from '@/lib/placement';
 import type { CompositionInputProps } from '@/remotion/inputProps';
@@ -28,20 +29,40 @@ export function TemplateComposition(props: TemplateCompositionProps) {
   const { width, height } = RESOLUTION_MAP[resolution];
   const format = getFormat(formatId);
 
+  const layoutContext = {
+    placement,
+    canvasWidth: width,
+    canvasHeight: height,
+    formatId,
+  };
+
   return (
     <CardStage width={width} height={height} backgroundMode={backgroundMode} customBackground={customBackground}>
-      {showSafeAreaGuides && format.platform !== 'youtube' && (
+      {showSafeAreaGuides && placement !== 'fullscreen' && format.platform !== 'youtube' && (
         <div style={safeAreaStyle(format)} />
       )}
-      <Stage format={format} placement={placement}>
-        <Component
-          fields={fields}
-          theme={theme}
-          globalSpeed={globalSpeed}
-          stripCardBackground={stripCardBackground}
-          formatId={formatId}
-        />
-      </Stage>
+      <TemplateLayoutContext.Provider value={layoutContext}>
+        <Stage format={format} placement={placement}>
+          <div
+            style={
+              placement === 'fullscreen'
+                ? { flex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch', minHeight: 0 }
+                : undefined
+            }
+          >
+            <Component
+              fields={fields}
+              theme={theme}
+              globalSpeed={globalSpeed}
+              stripCardBackground={stripCardBackground}
+              formatId={formatId}
+              placement={placement}
+              canvasWidth={width}
+              canvasHeight={height}
+            />
+          </div>
+        </Stage>
+      </TemplateLayoutContext.Provider>
     </CardStage>
   );
 }

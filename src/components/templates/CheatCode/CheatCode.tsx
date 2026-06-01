@@ -1,12 +1,13 @@
 import { applyMotionStyle, flashIn } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function CheatCode({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('cheat-code', fields);
+  const layout = useCardLayout('cheat-code', fields);
   const s = layout.contentScale;
   const ctag = getField(fields, 'ctag', '⚡ Cheat Code Activated');
   const code = getField(fields, 'code', '');
@@ -17,8 +18,7 @@ export function CheatCode({ fields, theme = shadowOwnerTheme, globalSpeed = 1, s
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : theme.dark0,
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           padding: `${spx(22, s)}px ${spx(26, s)}px`,

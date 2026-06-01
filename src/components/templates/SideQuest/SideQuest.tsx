@@ -1,12 +1,13 @@
 import { applyMotionStyle, slideR } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function SideQuest({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('side-quest', fields);
+  const layout = useCardLayout('side-quest', fields);
   const s = layout.contentScale;
   const qtag = getField(fields, 'qtag', 'New Side Quest Available');
   const qtitle = getField(fields, 'qtitle', '');
@@ -20,8 +21,7 @@ export function SideQuest({ fields, theme = shadowOwnerTheme, globalSpeed = 1, s
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : theme.dark2,
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark5}`,
           borderLeft: stripCardBackground ? 'none' : `${spx(3, s)}px solid ${theme.gold}`,

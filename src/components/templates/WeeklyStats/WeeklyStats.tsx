@@ -1,13 +1,14 @@
 import { applyMotionStyle, fadeL, getLocalProgress, slideUp } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
 import type { StatBar, StatBox } from '@/types';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function WeeklyStats({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('weekly-stats', fields);
+  const layout = useCardLayout('weekly-stats', fields);
   const s = layout.contentScale;
   const stitle = getField(fields, 'stitle', 'WEEKLY DEBRIEF');
   const ssub = getField(fields, 'ssub', '');
@@ -20,8 +21,7 @@ export function WeeklyStats({ fields, theme = shadowOwnerTheme, globalSpeed = 1,
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : '#060606',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           padding: spx(28, s),

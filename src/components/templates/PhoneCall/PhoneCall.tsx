@@ -1,12 +1,13 @@
 import { applyMotionStyle, slideUp2 } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function PhoneCall({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('phone-call', fields);
+  const layout = useCardLayout('phone-call', fields);
   const s = layout.contentScale;
   const ptag = getField(fields, 'ptag', '☎ Incoming Call');
   const pname = getField(fields, 'pname', '');
@@ -18,8 +19,7 @@ export function PhoneCall({ fields, theme = shadowOwnerTheme, globalSpeed = 1, s
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.96)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           padding: spx(24, s),

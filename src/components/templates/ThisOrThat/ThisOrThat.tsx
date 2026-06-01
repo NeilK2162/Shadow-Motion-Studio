@@ -1,8 +1,9 @@
 import { applyMotionStyle, counterUp, lFill, popIn, slideInLeft, slideInRight, slideUp } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
 import type { PollOption } from '@/types';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function ThisOrThat({
@@ -13,7 +14,7 @@ export function ThisOrThat({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('this-or-that', fields, formatId);
+  const layout = useCardLayout('this-or-that', fields, formatId);
   const s = layout.contentScale;
   const question = getField(fields, 'question', 'WHICH PATH?');
   const prompt = getField(fields, 'prompt', '');
@@ -69,8 +70,7 @@ export function ThisOrThat({
   };
 
   return (
-    <div style={themeVars(theme)}>
-      <div style={{ width: layout.cardWidth, minHeight: layout.cardHeight }}>
+    <div style={{ ...themeVars(theme), ...getCardShellStyle(layout) }}>
         <div
           style={{
             fontFamily: theme.titleFont,
@@ -125,7 +125,6 @@ export function ThisOrThat({
           </div>
           {renderOption(optionB, 'right', 0.15)}
         </div>
-      </div>
     </div>
   );
 }

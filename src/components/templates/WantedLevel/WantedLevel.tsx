@@ -1,7 +1,8 @@
 import { applyMotionStyle, flashIn, popIn, slideInRight } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function WantedLevel({
@@ -12,7 +13,7 @@ export function WantedLevel({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('wanted-level', fields, formatId);
+  const layout = useCardLayout('wanted-level', fields, formatId);
   const s = layout.contentScale;
   const wtag = getField(fields, 'wtag', 'WANTED');
   const stars = getField(fields, 'stars', 3);
@@ -25,8 +26,7 @@ export function WantedLevel({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.92)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           padding: spx(14, s),

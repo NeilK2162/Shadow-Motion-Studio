@@ -6,6 +6,7 @@ import { PLACEMENT_OPTIONS } from '@/lib/placement';
 import { TEMPLATE_DEFAULTS } from '@/data/templateDefaults';
 import { useEditorStore } from '@/store/editorStore';
 import type { Project, PollOption, StatBar, StatBox, StatField, StatusBar } from '@/types';
+import { RESOLUTION_MAP } from '@/types';
 
 const LAYOUT_FIELD_KEYS_SET = LAYOUT_FIELD_KEYS;
 
@@ -102,7 +103,11 @@ export function Properties() {
 
   const renderLayoutFields = () => {
     const d = DEFAULT_LAYOUT_FIELDS;
-    const layout = getCardLayout(project.template, fields, project.export.formatId);
+    const layout = getCardLayout(project.template, fields, project.export.formatId, {
+      placement: project.placement ?? getDefaultPlacement(project.template),
+      canvasWidth: RESOLUTION_MAP[project.export.resolution].width,
+      canvasHeight: RESOLUTION_MAP[project.export.resolution].height,
+    });
     const hasGlow = layout.hasGlow;
     const placement = project.placement ?? getDefaultPlacement(project.template);
 
@@ -149,6 +154,7 @@ export function Properties() {
         />
         <div className="font-mono text-[9px] text-dim">
           → {layout.cardWidth} × {layout.cardHeight}px · scale {layout.contentScale.toFixed(2)}
+          {layout.isFullscreen ? ' · fullscreen' : ''}
         </div>
         {hasGlow && (
           <>

@@ -1,7 +1,8 @@
 import { applyMotionStyle, expandLine, fadeL, scanAnim, slideUp } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function CharacterIntro({
@@ -12,7 +13,7 @@ export function CharacterIntro({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('character-intro', fields, formatId);
+  const layout = useCardLayout('character-intro', fields, formatId);
   const s = layout.contentScale;
   const tag = getField(fields, 'tag', 'NOW INTRODUCING');
   const name = getField(fields, 'name', '');
@@ -23,8 +24,7 @@ export function CharacterIntro({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.94)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           display: 'flex',

@@ -1,8 +1,9 @@
 import { applyMotionStyle, counterUp, lFill, slideInLeft } from '@/animations/presets';
+import { useCardLayout } from '@/hooks/useCardLayout';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
 import type { StatusBar } from '@/types';
-import { getCardLayout, spx } from '../shared/cardLayout';
+import { getCardShellStyle, spx  } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function StatusHud({
@@ -13,7 +14,7 @@ export function StatusHud({
   formatId,
 }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getCardLayout('status-hud', fields, formatId);
+  const layout = useCardLayout('status-hud', fields, formatId);
   const s = layout.contentScale;
   const bars = getField<StatusBar[]>(fields, 'bars', []);
   const showPct = getField(fields, 'showPct', true);
@@ -22,8 +23,7 @@ export function StatusHud({
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: layout.cardWidth,
-          minHeight: layout.cardHeight,
+          ...getCardShellStyle(layout),
           background: stripCardBackground ? 'transparent' : 'rgba(5,5,5,0.9)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
           padding: spx(16, s),
