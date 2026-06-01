@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import { existsSync } from 'fs';
 import type { Project } from '../types';
-import { renderBatch, renderProject } from '../renderer/render';
+import { closeRenderer, renderBatch, renderProject, warmupRenderer } from '../renderer/render';
 import { builtInThemes } from '../themes/tokens';
 import {
   configureRuntime,
@@ -146,11 +146,15 @@ export async function startServer(options: StartServerOptions = {}): Promise<Run
       const actualPort = typeof address === 'object' && address ? address.port : port;
       const url = `http://localhost:${actualPort}`;
       console.log(`Shadow Motion Studio API running on ${url}`);
+      // Prepare the renderer in the background so the first export is fast.
+      void warmupRenderer();
       resolve({
         port: actualPort,
         url,
         close: () =>
-          new Promise<void>((res, rej) => server.close((err) => (err ? rej(err) : res()))),
+          new Promise<void>((res, rej) => {
+            void closeRenderer().finally(() => server.close((err) => (err ? rej(err) : res())));
+          }),
       });
     });
   });

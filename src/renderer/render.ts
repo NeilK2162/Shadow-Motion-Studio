@@ -1,16 +1,20 @@
+import os from 'os';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
+import { openBrowser, renderMedia, renderStill, type HeadlessBrowser } from '@remotion/renderer';
 import { createDefaultProject, projectToInputProps } from '../remotion/inputProps';
 import { getFormat } from '../lib/formats';
-import type { Project } from '../types';
+import type { Project, TemplateId } from '../types';
 import { RESOLUTION_MAP } from '../types';
 import { getDefaultFields } from '../data/templateDefaults';
 import { getBinariesDirectory, getExportsDir, getServeUrl } from '../lib/runtimeConfig';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
+
+/** Cap parallel frame rendering so memory stays bounded while still using multiple cores. */
+const RENDER_CONCURRENCY = Math.max(1, Math.min(Math.floor(os.cpus().length / 2), 8));
 
 let bundleLocation: string | null = null;
 
@@ -30,9 +34,79 @@ async function getBundle(): Promise<string> {
     entryPoint: entry,
     rootDir: ROOT,
     webpackOverride,
-    enableCaching: false,
+    enableCaching: true,
   });
   return bundleLocation;
+}
+
+// Reuse a single headless Chromium across exports. Launching the browser is the
+// dominant cost for short clips, so we pay it once and keep it warm.
+let browser: HeadlessBrowser | null = null;
+let browserPromise: Promise<HeadlessBrowser> | null = null;
+
+async function getBrowser(): Promise<HeadlessBrowser> {
+  if (browser) return browser;
+  if (!browserPromise) {
+    browserPromise = openBrowser('chrome', {
+      logLevel: 'error',
+      chromiumOptions: { gl: 'angle' },
+    })
+      .then((b) => {
+        browser = b;
+        return b;
+      })
+      .catch((err) => {
+        browserPromise = null;
+        throw err;
+      });
+  }
+  return browserPromise;
+}
+
+/** Warm up the bundle + browser ahead of the first export (fire-and-forget). */
+export async function warmupRenderer(): Promise<void> {
+  await getBundle().catch(() => undefined);
+  await getBrowser().catch(() => undefined);
+}
+
+/** Close the shared browser (call on server/app shutdown). */
+export async function closeRenderer(): Promise<void> {
+  const current = browser;
+  browser = null;
+  browserPromise = null;
+  if (current) {
+    await current.close({ silent: true }).catch(() => undefined);
+  }
+}
+
+/**
+ * Build the composition metadata directly instead of calling selectComposition,
+ * which would launch/navigate a browser just to read values we already know.
+ * Safe because our compositions have static metadata (no calculateMetadata).
+ */
+function buildComposition(
+  templateId: TemplateId,
+  inputProps: Record<string, unknown>,
+  width: number,
+  height: number,
+  durationInFrames: number,
+  fps: number,
+) {
+  return {
+    id: templateId,
+    width,
+    height,
+    fps,
+    durationInFrames,
+    props: inputProps,
+    defaultProps: {},
+    defaultCodec: null,
+    defaultOutName: null,
+    defaultVideoImageFormat: null,
+    defaultPixelFormat: null,
+    defaultProResProfile: null,
+    defaultSampleRate: null,
+  } as const;
 }
 
 function mergeProject(partial: Partial<Project>): Project {
@@ -76,12 +150,15 @@ export async function renderProject(project: Project, outputDir?: string): Promi
   const compositionId = project.template;
   const binariesDirectory = getBinariesDirectory();
 
-  const composition = await selectComposition({
-    serveUrl,
-    id: compositionId,
+  const { width, height } = RESOLUTION_MAP[project.export.resolution];
+  const composition = buildComposition(
+    compositionId,
     inputProps,
-    binariesDirectory,
-  });
+    width,
+    height,
+    project.animation.durationInFrames,
+    project.export.fps,
+  );
 
   const exportsDir = outputDir ?? getExportsDir();
   await fs.mkdir(exportsDir, { recursive: true });
@@ -91,42 +168,63 @@ export async function renderProject(project: Project, outputDir?: string): Promi
   const suffix = formatSuffix(project);
   const outputPath = path.join(exportsDir, `${compositionId}${suffix}-${timestamp}.${ext}`);
 
-  const { width, height } = RESOLUTION_MAP[project.export.resolution];
-  const compositionOverride = {
-    ...composition,
-    width,
-    height,
-    durationInFrames: project.animation.durationInFrames,
-    fps: project.export.fps,
+  const run = async (puppeteerInstance: HeadlessBrowser): Promise<void> => {
+    if (project.export.format === 'png' || project.export.format === 'jpg') {
+      await renderStill({
+        serveUrl,
+        composition,
+        inputProps,
+        output: outputPath,
+        imageFormat: project.export.format === 'jpg' ? 'jpeg' : project.export.format,
+        frame: project.animation.durationInFrames - 1,
+        binariesDirectory,
+        puppeteerInstance,
+        logLevel: 'error',
+      });
+      return;
+    }
+
+    const transparent = project.export.transparent && project.export.format === 'webm';
+
+    await renderMedia({
+      serveUrl,
+      composition,
+      inputProps,
+      codec: project.export.format === 'webm' ? 'vp9' : 'h264',
+      outputLocation: outputPath,
+      pixelFormat: transparent ? 'yuva420p' : 'yuv420p',
+      imageFormat: transparent ? 'png' : undefined,
+      binariesDirectory,
+      puppeteerInstance,
+      concurrency: RENDER_CONCURRENCY,
+      logLevel: 'error',
+    });
   };
 
-  if (project.export.format === 'png' || project.export.format === 'jpg') {
-    await renderStill({
-      serveUrl,
-      composition: compositionOverride,
-      inputProps,
-      output: outputPath,
-      imageFormat: project.export.format === 'jpg' ? 'jpeg' : project.export.format,
-      frame: project.animation.durationInFrames - 1,
-      binariesDirectory,
-    });
-    return outputPath;
+  try {
+    await run(await getBrowser());
+  } catch (error) {
+    // A stale/crashed browser is the most common transient failure; reset and retry once.
+    await closeRenderer();
+    if (isBrowserError(error)) {
+      await run(await getBrowser());
+    } else {
+      throw error;
+    }
   }
 
-  const transparent = project.export.transparent && project.export.format === 'webm';
-
-  await renderMedia({
-    serveUrl,
-    composition: compositionOverride,
-    inputProps,
-    codec: project.export.format === 'webm' ? 'vp9' : 'h264',
-    outputLocation: outputPath,
-    pixelFormat: transparent ? 'yuva420p' : 'yuv420p',
-    imageFormat: transparent ? 'png' : undefined,
-    binariesDirectory,
-  });
-
   return outputPath;
+}
+
+function isBrowserError(error: unknown): boolean {
+  const message = String((error as Error)?.message ?? error).toLowerCase();
+  return (
+    message.includes('browser') ||
+    message.includes('target closed') ||
+    message.includes('session closed') ||
+    message.includes('websocket') ||
+    message.includes('disconnected')
+  );
 }
 
 export async function renderBatch(items: Partial<Project>[]): Promise<string> {
