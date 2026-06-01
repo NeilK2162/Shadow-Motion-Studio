@@ -1,42 +1,59 @@
-# Shadow Motion Studio Project Document
+# Shadow Motion Studio — Project Document
 
-Version reviewed: 1.1.2  
-Project type: Local creator tool, motion graphics editor, Remotion renderer, Electron desktop app  
-Primary audience: Solo creators, YouTubers, Shorts/Reels editors, founder-led content teams
+**Version:** 1.1.2  
+**Last updated:** June 2026  
+**Project type:** Local creator tool · motion graphics editor · Remotion renderer · Electron desktop app  
+**Primary audience:** Solo creators, YouTubers, Shorts/Reels editors, founder-led content teams
+
+---
 
 ## 1. Executive Summary
 
-Shadow Motion Studio is a local-first motion graphics studio for creators who want high-impact, GTA-inspired video assets without opening After Effects or relying on cloud design tools. It gives a creator a library of animated templates, a live preview editor, project save/load, platform export presets, and direct rendering to video, still image, or transparent overlay formats.
+Shadow Motion Studio is a local-first motion graphics studio for creators who want high-impact, GTA-inspired video assets without opening After Effects or relying on cloud design tools. It provides a library of animated templates, a live preview editor, project save/load, platform export presets, and direct rendering to video, still image, or transparent overlay formats.
 
-The product is built for fast creator workflows: pick a template, change the text and styling, preview the animation, export it, and drop the rendered asset into a video editor such as Premiere Pro, DaVinci Resolve, CapCut, or Final Cut.
+As of v1.1.2, the product has grown beyond a static template editor. It now includes:
 
-The current implementation is more than a static prototype. It includes a React editor, deterministic Remotion compositions, a local Express API, batch rendering from JSON, project persistence, Electron packaging, and Windows portable build configuration. It is best described as a local creator edition that is ready for serious personal use and beta-level use by other creators.
+- **19 built-in Remotion templates** with full preview and export parity.
+- **The Director** — an AI-assisted generative pipeline that plans video beats, fills copy, and can **author new custom templates** as declarative JSON.
+- **DynamicTemplate** — a runtime interpreter that renders any valid `TemplateDefinition` without new React code.
+- **Custom template library** — save, edit, duplicate, import/export, and render user- or AI-created templates.
+- **Electron portable packaging** for Windows (`ShadowMotionStudio-1.1.2-portable.exe`, ~83 MB).
+
+The core loop remains: pick a template → edit → preview → export → drop into Premiere, DaVinci, CapCut, or Final Cut. The Director adds a second loop: describe a video concept → get a multi-beat plan → generate assets → review → batch render.
+
+---
 
 ## 2. What The Project Is For
 
-Shadow Motion Studio exists to help creators produce repeatable cinematic motion graphics quickly.
+Shadow Motion Studio helps creators produce repeatable cinematic motion graphics quickly.
 
-The project is especially useful for creators who make:
+Especially useful for:
 
 - YouTube intros, chapter cards, transition cards, punchlines, and recap moments.
 - Shorts/Reels overlays, countdowns, engagement prompts, and creator-branded HUD elements.
-- Founder journey videos, challenge series, productivity vlogs, gaming-style edits, or business storytelling content.
+- Founder journey videos, challenge series, productivity vlogs, gaming-style edits, or business storytelling.
 - Repeatable social content where the same visual format needs new text every day or week.
-- Transparent overlays that can sit on top of existing footage.
+- Transparent WebM overlays layered on existing footage.
+- **Batch generation** of themed asset packs (e.g. “Miami holiday pack with multiple loading screens”) via The Director.
 
-The product does not try to replace a full nonlinear video editor. It focuses on making branded motion assets that can be inserted into a larger editing workflow.
+The product does not replace a full nonlinear video editor. It focuses on branded motion assets that slot into a larger editing workflow.
+
+---
 
 ## 3. Creator Problem
 
-Creators often need animated graphics but face several common problems:
+Creators often need animated graphics but face:
 
 - After Effects is powerful but slow for simple repeatable edits.
 - Template marketplaces are not tailored to a creator's exact brand language.
-- Browser-based design tools may not export transparent video reliably or may depend on subscriptions.
+- Browser-based design tools may not export transparent video reliably or depend on subscriptions.
 - Making the same asset in multiple aspect ratios is repetitive.
 - Batch production of many personalized cards is difficult without automation.
+- **Creating new visual formats** (e.g. a custom loading screen style) traditionally requires a developer or motion designer.
 
-Shadow Motion Studio solves this by turning a fixed creator visual language into editable, exportable templates.
+Shadow Motion Studio addresses this by turning a fixed creator visual language into editable, exportable templates — and, with The Director, by **generating new template definitions** when built-ins don't fit.
+
+---
 
 ## 4. Product Positioning
 
@@ -44,414 +61,557 @@ Shadow Motion Studio is a local, creator-owned motion asset generator.
 
 It sits between:
 
-- A design tool, because creators edit copy, themes, layout, and export settings visually.
-- A motion graphics renderer, because Remotion renders actual video/still outputs.
-- A desktop utility, because Electron packages the app into a portable Windows build.
-- A lightweight production pipeline, because JSON batch rendering can generate many assets from structured data.
+| Layer | Role |
+|-------|------|
+| Design tool | Edit copy, themes, layout, export settings visually |
+| Motion renderer | Remotion renders actual video/still outputs |
+| AI production assistant | The Director plans beats, writes copy, authors templates |
+| Desktop utility | Electron packages into a portable Windows build |
+| Lightweight pipeline | JSON batch rendering generates many assets from structured data |
 
-The intended feel is not "generic Canva clone." The product is designed as a focused creative operating system for a specific creator style.
+The intended feel is not “generic Canva clone.” It is a focused creative operating system for a specific creator style — dark backgrounds, gold/green accents, mono UI labels, GTA-flavored hustle aesthetic.
+
+---
 
 ## 5. Core Value For Creators
 
-The main value is speed plus consistency.
+**Speed plus consistency.**
 
-A creator can build a recognizable visual language once, then reuse it across many videos and platforms. The templates are not isolated mockups; they are wired into live preview and export. This means the asset a creator sees in the editor is the same composition used by the renderer.
+Build a recognizable visual language once, reuse it across videos and platforms. Templates are wired into live preview and export — what you see in the editor is what Remotion renders.
 
-Creator benefits:
+| Benefit | Detail |
+|---------|--------|
+| Branded cinematic cards | 19 built-ins + unlimited custom templates |
+| Lower AE dependency | Routine motion graphics without timeline editing |
+| Platform presets | YouTube 16:9, Shorts/Reels 9:16, square/ portrait feed |
+| Transparent WebM | Professional overlay workflow |
+| Local ownership | Projects, themes, packs, exports stay on disk |
+| Batch rendering | JSON batch + Director pack render |
+| AI-assisted packs | Describe a concept; get a multi-asset plan and render folder |
 
-- Fast creation of branded cinematic cards and overlays.
-- Lower dependency on After Effects for routine motion graphics.
-- Consistent style across YouTube, Shorts, Reels, and feed posts.
-- Transparent WebM overlays for professional video editing workflows.
-- Local ownership of project files and outputs.
-- Batch rendering for repeated content formats.
+---
 
 ## 6. Current Product Surface
 
-The current app includes four main user-facing areas.
+### 6.1 Template Sidebar
 
-### Template Sidebar
+Lists built-in and **custom** templates, grouped by purpose:
 
-The sidebar lists available templates and groups them by creative purpose:
+- **Stingers** — achievement, failure, countdown
+- **HUD** — wanted level, cash, status, GPS, character intro, now playing
+- **Cards** — chapter, loading, side quest, location, phone, cheat code, weekly stats
+- **Engagement** — subscribe prompt, this-or-that poll
 
-- Stingers
-- HUD
-- Cards
-- Engagement
+Platform filters: All · YouTube · Reels · Feed. Each template declares `recommendedFormats`.
 
-Creators can filter templates by target platform:
+Custom templates appear in a **Custom** section (loaded from `data/templates/` via API).
 
-- All
-- YouTube
-- Reels
-- Feed
+### 6.2 Live Preview
 
-Templates also understand recommended formats, so creators can see which templates fit a platform preset best.
+Remotion Player with:
 
-### Live Preview
+- Auto-playing loop
+- Replay
+- Platform format switching (16:9, 9:16, 1:1, 4:5)
+- Preview background: dark · transparent checkerboard · custom color
+- Safe area guides
+- Resolution-aware scaling
 
-The preview area uses Remotion Player to render the active template in the browser. It supports:
+Custom templates route through `DynamicTemplate` when `project.templateDef` is set.
 
-- Auto-playing looping preview.
-- Replay button.
-- Platform format switching.
-- Preview background mode: dark, transparent checkerboard, or custom color.
-- Safe area guides for formats where UI overlays matter.
-- Resolution-aware scaling so large exports can be previewed inside the editor.
+### 6.3 Property Editor
 
-### Property Editor
+Editable per project:
 
-The property editor lets creators change:
+- Template text, numbers, stats, bars, poll options, stars
+- Card layout and placement (9 positions + fullscreen)
+- Size multiplier, aspect multiplier, content scale
+- Glow settings (where supported)
+- Theme selection
+- Animation speed and duration (frames)
+- Export resolution, FPS, format, transparency
+- Strip card background for cleaner overlays
 
-- Template text and numbers.
-- Template-specific structured fields such as stats, bars, poll options, and stars.
-- Card layout and placement.
-- Size multiplier, aspect multiplier, and content scale.
-- Glow settings where supported.
-- Theme.
-- Animation speed.
-- Duration in frames.
-- Export resolution, FPS, file format, and transparency.
-- Whether to strip the card background for cleaner overlays.
+### 6.4 Project And Batch Tools
 
-### Project And Batch Tools
+- Save / load projects as local JSON (`projects/`)
+- Export current project via API
+- Upload batch JSON to render many variants (`POST /api/batch`)
 
-The editor supports:
+### 6.5 The Director (AI Generative Panel)
 
-- Saving projects as local JSON.
-- Loading projects by name.
-- Exporting the current project.
-- Uploading a batch JSON file to render many assets at once.
+Opened from the editor header. Full generative workflow:
+
+| UI area | Purpose |
+|---------|---------|
+| **Concept input** | Describe a video or asset pack in natural language |
+| **Plan view** | Shows beats with `reuse` vs `create` mode per beat |
+| **Create panel** | Highlights which beats will spawn new custom templates |
+| **Asset grid** | Generated assets with template ID, custom badge, field preview |
+| **Cost meter** | Token usage, cache reads/writes, fresh input, warm/cold indicator, estimated USD |
+| **Template library modal** | Edit, duplicate, export, import, delete custom templates |
+| **Series manager** | Continuity facts (users, respect, ₹ amounts) across episodes |
+| **Settings** | Provider, API key, quality mode, session token budget, dry run |
+
+**Director pipeline:** Plan → Create (optional) → Draft → Validate/Repair → Pack → Render
+
+- **Plan:** LLM chooses 3–7 beats; each beat is `reuse` (built-in template) or `create` (new custom template).
+- **Create:** Anthropic-only; authors a `TemplateDefinition` JSON, validates, repairs once, saves to registry.
+- **Draft:** Fills all template fields with on-brand copy.
+- **Pack:** Saved to `data/director-packs/`; can batch-render to `exports/director-<timestamp>/`.
+
+**Offline fallback:** With provider `local` or on LLM failure, deterministic local planner/drafter runs without API key.
+
+---
 
 ## 7. Template Library
 
-The current codebase defines 19 templates.
+### 7.1 Built-in Templates (19)
 
-### Stingers
+| Group | ID | Label |
+|-------|-----|-------|
+| Stingers | `mission-passed` | Mission Passed |
+| Stingers | `mission-failed` | Mission Failed |
+| Stingers | `wasted` | Wasted |
+| Stingers | `countdown` | Countdown |
+| Cards | `chapter-card` | Chapter Card |
+| Cards | `loading-screen` | Loading Screen |
+| Cards | `side-quest` | Side Quest |
+| Cards | `enter-location` | Enter Location |
+| Cards | `phone-call` | Phone Call |
+| Cards | `cheat-code` | Cheat Code |
+| Cards | `weekly-stats` | Weekly Stats |
+| HUD | `wanted-level` | Wanted Level |
+| HUD | `cash-pickup` | Cash Pickup |
+| HUD | `status-hud` | Status HUD |
+| HUD | `gps-route` | GPS Route |
+| HUD | `character-intro` | Character Intro |
+| HUD | `now-playing` | Now Playing |
+| Engagement | `subscribe-prompt` | Subscribe Prompt |
+| Engagement | `this-or-that` | This or That |
 
-- Mission Passed: achievement or success moment.
-- Mission Failed: failure, retry, or lesson moment.
-- Wasted: dramatic loss/failure punchline.
-- Countdown: countdown before a reveal, launch, or challenge.
+Source: `src/types/index.ts` (`TEMPLATE_META`), React components in `src/components/templates/`.
 
-### Cards
+### 7.2 Custom Templates (DynamicTemplate)
 
-- Chapter Card: segment opener or location/title card.
-- Loading Screen: loading/tip screen between scenes.
-- Side Quest: task, opportunity, or new objective card.
-- Enter Location: location reveal or scene transition.
-- Phone Call: incoming call or client/opportunity moment.
-- Cheat Code: unlock, hack, shortcut, or breakthrough.
-- Weekly Stats: recap, progress report, or creator dashboard.
+Custom templates are **declarative JSON** (`TemplateDefinition`, schema v1), not new React files.
 
-### HUD
+**Schema highlights** (`src/director/templateSchema.ts`):
 
-- Wanted Level: intensity, heat, risk, or hype meter.
-- Cash Pickup: revenue, win, donation, sale, or points gain.
-- Status HUD: health/energy/progress style overlay.
-- GPS Route: route, next goal, or destination.
-- Character Intro: personality, guest, founder, or role reveal.
-- Now Playing: music/radio/station style overlay.
+- Canvas 320–1080 px; duration 1–6 s
+- Fields: text, number, boolean, color, statRow, statBox, bar, buttonRow
+- Elements: text, glyph, line, statRow, bar, statBox, glow, scanline, badge, buttonRow, ring, watermark
+- Animations via named presets (fadeIn, slideUp, scaleIn, pulse, typewriter, etc.)
+- Colors: theme tokens (gold, green, dim, …) or `#rrggbb` hex
+- Background: `solid` | `gradient` | `transparent`
+- **`backgroundColors`:** optional `[startHex, endHex]` for context-aware gradients (e.g. sunset `["#ff6b35","#4a0e8f"]`, beach `["#0077b6","#00b4d8"]`)
 
-### Engagement
+**Storage:**
 
-- Subscribe Prompt: call-to-action overlay.
-- This Or That: poll, choice, or comment prompt.
+- Definitions: `data/templates/custom/<id>.json`
+- Index: `data/templates/index.json`
+- Gitignored; persisted per machine / Electron user data dir
 
-These templates make the tool suitable for both narrative video edits and creator growth content.
+**Interpreter:** `src/components/templates/DynamicTemplate.tsx` + shared primitives in `src/components/templates/shared/primitives/`.
+
+**Remotion composition:** `dynamic-template` (registered in `src/remotion/Root.tsx`).
+
+**Validation:** Strict server-side rules in `src/director/validateTemplate.ts` (canvas bounds, element kinds, preset names, bind checks, hex colors, etc.).
+
+**Limitation:** Custom templates use **CSS gradients and typography**, not photographic backgrounds. The Director cannot generate palm-tree photos or beach imagery — only color palettes, glyphs, text, and motion primitives suited to the concept.
+
+---
 
 ## 8. Export Capabilities
 
-The app supports both visual export controls and programmatic rendering.
+### 8.1 Formats
 
-Supported output formats:
+| Format | Use case |
+|--------|----------|
+| WebM (VP9, yuva420p) | Transparent overlays |
+| MP4 (H.264) | Standard video clips |
+| PNG | Still frame |
+| JPG | Still frame |
 
-- WebM, including transparent overlay workflows.
-- MP4 for standard video clips.
-- PNG for still frames.
-- JPG for still frames.
+### 8.2 Resolutions
 
-Supported resolutions:
+- 1920×1080 — YouTube 16:9
+- 1280×720 — YouTube 720p
+- 1080×1920 — Shorts/Reels 9:16
+- 1080×1080 — Square feed
+- 1080×1350 — Portrait feed
 
-- 1920x1080 for YouTube 16:9.
-- 1280x720 for YouTube 720p.
-- 1080x1920 for Shorts/Reels 9:16.
-- 1080x1080 for square feed posts.
-- 1080x1350 for portrait feed posts.
+FPS: 30 or 60.
 
-Supported FPS:
+### 8.3 Platform Presets
 
-- 30 FPS.
-- 60 FPS.
+- YouTube Clip (MP4)
+- YouTube Overlay (WebM)
+- Reels/Shorts (MP4)
+- Reels Overlay (WebM)
+- Square Post (MP4)
 
-Platform export presets include:
+Outputs are named with template and format suffixes under `exports/`.
 
-- YouTube Clip as MP4.
-- YouTube Overlay as WebM.
-- Reels/Shorts as MP4.
-- Reels Overlay as WebM.
-- Square Post as MP4.
+### 8.4 Render Paths
 
-The renderer names outputs with template and format suffixes, making exported files easier to identify.
+| Entry | Output |
+|-------|--------|
+| Editor Export button | `exports/<id>_<format>-<timestamp>.<ext>` |
+| Batch JSON | Multiple files per batch config |
+| Director pack render | `exports/director-<timestamp>/` |
+| CLI `npm run render` | From project JSON path |
 
-## 9. Creator Use Cases
+Custom templates use composition `dynamic-template` automatically when `templateDef` is present.
 
-### YouTube Long-Form Creator
+---
 
-A creator making weekly YouTube videos can use Shadow Motion Studio to generate intro cards, chapter cards, mission-complete moments, status overlays, and end-screen subscribe prompts. The transparent WebM exports are especially useful because they can be layered over existing footage.
+## 9. The Director — Technical Detail
 
-### Shorts And Reels Creator
+### 9.1 Orchestrator (`src/director/orchestrator.ts`)
 
-A vertical creator can use the 9:16 presets to create countdowns, poll prompts, character intros, GPS route moments, and high-energy CTA overlays. Safe area preview helps avoid placing key content where platform UI may cover it.
+```
+generatePack(request)
+  ├── runPlan()           → beats (reuse | create)
+  ├── createTemplate()    → per create beat (Anthropic + cache)
+  ├── fillCustomFields()  → field values for new templates
+  ├── runDraft()          → fill built-in template fields
+  ├── validate + runRepair()
+  └── DirectorPack        → saved + returned to UI
+```
 
-### Founder Or Builder In Public
+Config (`src/director/config.ts`):
 
-The default content language is especially aligned with founder journey storytelling: missions, clients, progress, cash pickups, weekly stats, and side quests. This makes it useful for documenting business progress in a more cinematic way.
+| Setting | Value |
+|---------|-------|
+| Default models | OpenAI `gpt-4o-mini`, Anthropic `claude-haiku-4-5-20251001` |
+| Quality models | OpenAI `gpt-4o`, Anthropic `claude-sonnet-4-6` |
+| Max beats | 7 |
+| Session token budget (default) | 50,000 |
+| Token limits | plan 2048, draft 2048, repair 1024, create 4096 |
 
-### Gaming-Style Storytelling
+### 9.2 LLM Providers
 
-The GTA-inspired aesthetic supports achievement cards, failure cards, wanted levels, HUD bars, route indicators, and location cards. This is useful even for non-gaming content that wants gaming-style pacing and visual energy.
+| Provider | File | Notes |
+|----------|------|-------|
+| `openai` | `providers/openai.ts` | JSON mode |
+| `anthropic` | `providers/anthropic.ts` | Prompt caching, assistant prefill, required for template **create** |
+| `mock` | `providers/mock.ts` | Deterministic tests |
+| `local` | `local/planner.ts`, `local/drafter.ts` | No API key; keyword + series-memory rules |
 
-### Agency Or Editor Workflow
+**Anthropic caching:** Static prompt blocks (>4096 tokens) use `cache_control: ephemeral`. Cost meter shows cache writes vs reads.
 
-An editor can prepare batch JSON files to generate many variations of the same asset: multiple client cards, episode chapters, poll prompts, weekly recaps, or social platform variants.
+**JSON robustness:** `parseLLMJson.ts` handles markdown fences, trailing commas, truncation, and beat salvage. Planner uses assistant prefill (`{"beats":[`) to reduce fence/truncation failures.
 
-### Content System Builder
+### 9.3 Series Memory And Voice
 
-Because projects are structured JSON and rendering can be automated, Shadow Motion Studio can become part of a larger content system where scripts generate asset data and the renderer outputs finished clips.
+- **Series memory** (`data/series/<id>.json`): episode number, shadow users, respect, currency facts — fed into planner/drafter for continuity.
+- **Voice profiles** (`data/voices.json`): tone description and examples for copy generation.
+
+### 9.4 Pricing
+
+Estimated USD per step via `src/director/pricing.ts` (input/output/cache token rates per model).
+
+---
 
 ## 10. Technical Architecture
 
-The project is built around one important principle: the same React template components power both preview and export.
+**Principle:** The same React template components (or `DynamicTemplate`) power both preview and export.
 
-### Frontend
+### 10.1 Frontend Stack
 
-The editor is built with:
+- React 18 · TypeScript · Vite 6 · Tailwind CSS
+- Zustand (`editorStore`, `directorStore`, `customTemplateStore`)
+- Remotion Player 4.0.272 · Lucide React
 
-- React 18.
-- TypeScript.
-- Vite.
-- Tailwind CSS.
-- Zustand for editor state.
-- Remotion Player for live preview.
-- Lucide React for editor UI icons.
+| Area | Path |
+|------|------|
+| Editor shell | `src/components/editor/` |
+| Director UI | `src/components/director/` |
+| Built-in templates | `src/components/templates/` |
+| Dynamic interpreter | `src/components/templates/DynamicTemplate.tsx` |
+| Types | `src/types/index.ts` |
+| Defaults | `src/data/templateDefaults.ts` |
 
-Key frontend areas:
+### 10.2 Rendering
 
-- `src/components/editor`: editor shell, sidebar, preview, and property controls.
-- `src/components/templates`: all template components.
-- `src/store/editorStore.ts`: editor project state and user actions.
-- `src/types/index.ts`: project, template, export, and metadata types.
-- `src/data/templateDefaults.ts`: default fields and durations.
+| Module | Role |
+|--------|------|
+| `src/remotion/TemplateComposition.tsx` | Routes built-in vs DynamicTemplate |
+| `src/remotion/inputProps.ts` | Project → Remotion props; `DYNAMIC_TEMPLATE_COMPOSITION_ID` |
+| `src/renderer/render.ts` | Stills, video, batch, warm headless Chromium |
+| `src/renderer/render-cli.ts` | CLI entry |
 
-### Rendering
+Renderer reuses a single headless browser where possible. Concurrency ~half CPU cores (max 8). Packaged Electron uses prebuilt `dist-remotion/` and unpacked `@remotion/compositor-win32-x64-msvc`.
 
-Rendering is powered by Remotion.
+### 10.3 Local API (`src/server/app.ts`)
 
-Key rendering areas:
+Port **3456** in dev; random free port in Electron. Vite proxies `/api` via `scripts/vite-api-plugin.ts` (auto-starts API; **watches `src/` and restarts API on `.ts` changes**).
 
-- `src/remotion/TemplateComposition.tsx`: shared composition wrapper.
-- `src/remotion/inputProps.ts`: conversion between editor projects and Remotion input props.
-- `src/renderer/render.ts`: export engine for stills, video, batch rendering, and browser reuse.
-- `src/renderer/render-cli.ts`: CLI renderer for project JSON files.
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/export` | Render single project |
+| POST | `/api/batch` | Render project array |
+| POST | `/api/director/generate` | Generate director pack |
+| POST | `/api/director/render` | Render pack assets |
+| GET/POST | `/api/director/settings` | Director config |
+| GET/POST | `/api/director/series` | Series memory |
+| GET/POST | `/api/director/voices` | Voice profiles |
+| GET | `/api/director/packs` | List saved packs |
+| GET | `/api/director/packs/load?id=` | Load pack |
+| GET | `/api/director/usage` | Session token usage |
+| POST | `/api/director/usage/reset` | Reset usage counter |
+| GET | `/api/templates` | List custom templates |
+| GET | `/api/templates/load?id=` | Load template def |
+| POST | `/api/templates` | Save custom template |
+| DELETE | `/api/templates/:id` | Delete custom template |
+| POST | `/api/templates/import` | Import template JSON |
+| POST | `/api/projects/save` | Save project |
+| GET | `/api/projects/load?name=` | Load project |
+| GET | `/api/projects/list` | List projects |
+| GET | `/api/themes` | Load themes |
+| POST | `/api/themes/save` | Save themes |
 
-The renderer reuses a single headless Chromium browser where possible. This improves short export performance because browser startup is often the slowest part of rendering small clips.
+Local-only; not designed for public multi-user exposure.
 
-### Local API
+### 10.4 Desktop Packaging (Electron)
 
-The app includes a local Express server for file access and rendering.
+| Item | Detail |
+|------|--------|
+| Entry | `electron/main.ts` → `dist-electron/main.cjs` |
+| App ID | `com.shadowowner.motionstudio` |
+| Product name | Shadow Motion Studio |
+| Target | Windows x64 **portable** |
+| Output | `release/ShadowMotionStudio-1.1.2-portable.exe` (~83 MB) |
+| Unpacked | `release/win-unpacked/Shadow Motion Studio.exe` |
+| User data (packaged) | `%USERPROFILE%\Documents\ShadowMotionStudio` |
+| Resources | `dist/` (UI), `dist-remotion/` (bundle), compositor unpacked from asar |
 
-Main API capabilities:
+Flow: Electron starts embedded Express → serves UI → Remotion render uses packaged binaries.
 
-- `POST /api/export`: render the current project.
-- `POST /api/batch`: render multiple project variants.
-- `POST /api/projects/save`: save a project JSON file.
-- `GET /api/projects/load`: load a project JSON file.
-- `GET /api/projects/list`: list saved projects.
-- `GET /api/themes`: load saved or built-in themes.
-- `POST /api/themes/save`: save theme data.
+**Build commands:**
 
-The API is local-only infrastructure. It is not designed as a public multi-user backend.
+```bash
+npm run app:build    # dist + dist-remotion + dist-electron
+npm run app          # Run Electron locally
+npm run package      # Portable Windows exe
+```
 
-### Desktop Packaging
+**Known packaging notes:** Default Electron icon (no custom icon configured). Code signing skipped (no certificate). `author` / `description` fields absent in `package.json` (electron-builder warnings only).
 
-Electron wraps the local server and frontend into a desktop app.
+### 10.5 Runtime Configuration
 
-Packaging features:
+`src/lib/runtimeConfig.ts` — env overrides:
 
-- Portable Windows target via Electron Builder.
-- Built frontend served from `dist`.
-- Prebuilt Remotion bundle served from `dist-remotion`.
-- Electron main process starts the local API on a random free port.
-- Packaged app stores user data in the user's Documents folder under `ShadowMotionStudio`.
-- Remotion compositor binaries are unpacked for packaged rendering.
+| Variable | Purpose |
+|----------|---------|
+| `SMS_DATA_DIR` | Base for projects, exports, data, assets |
+| `REMOTION_SERVE_URL` | Prebuilt Remotion bundle path (production) |
+| `REMOTION_BINARIES_DIR` | Compositor/ffmpeg directory |
+
+---
 
 ## 11. Data And Storage Model
 
-The project intentionally avoids databases and cloud services.
+No database or cloud. All persistence is filesystem JSON and rendered media.
 
-Local folders:
+| Path | Contents |
+|------|----------|
+| `projects/` | Saved editor / director project JSON |
+| `exports/` | Rendered video and images |
+| `data/director.json` | Director settings (API key stored locally) |
+| `data/voices.json` | Voice profiles |
+| `data/themes.json` | Custom theme overrides |
+| `data/series/` | Series memory per show |
+| `data/director-packs/` | Saved generative packs |
+| `data/templates/index.json` | Custom template index |
+| `data/templates/custom/` | Custom `TemplateDefinition` JSON files |
+| `assets/` | Reserved for user assets (no full UI yet) |
 
-- `projects`: saved project JSON files.
-- `exports`: rendered video and image outputs.
-- `data`: saved data files such as themes.
-- `assets`: reserved for creator assets.
+Dev: paths under repo cwd. Packaged Electron: `%USERPROFILE%\Documents\ShadowMotionStudio`.
 
-In development, these folders resolve under the working directory by default. In the packaged Electron app, they resolve to a persistent writable user data location.
+Most user data paths are **gitignored**.
 
-Project data is structured around:
+**Project shape:** template ID (or custom def), fields, theme, animation, export config, placement, optional `templateDef` for custom templates.
 
-- Selected template.
-- Template fields.
-- Theme tokens.
-- Animation configuration.
-- Export configuration.
-- Placement configuration.
-
-This makes saved projects portable, easy to inspect, and suitable for batch generation.
+---
 
 ## 12. Build And Run Commands
 
-Development commands:
+### Development
 
 ```bash
 npm install
-npm run server
-npm run dev
+npm run server    # Terminal 1 — API on :3456
+npm run dev       # Terminal 2 — Editor on :5173 (auto-starts API if port free)
 ```
 
-Rendering from CLI:
+Gallery (static final-frame view): `http://localhost:5173/?gallery=1`
+
+### CLI render
 
 ```bash
 npm run render -- projects/my-project.json
 ```
 
-Production app build:
+### Tests
+
+```bash
+npm run test:director   # 16 tests — parseLLMJson, validation, local planner, foundation
+npm run build           # TypeScript + Vite production build
+```
+
+### Desktop
 
 ```bash
 npm run app:build
-```
-
-Run Electron locally after building:
-
-```bash
 npm run app
+npm run package         # → release/ShadowMotionStudio-1.1.2-portable.exe
 ```
 
-Create a portable Windows package:
+---
 
-```bash
-npm run package
-```
+## 13. Test Coverage (v1.1.2)
 
-## 13. Current Readiness
+| File | Covers |
+|------|--------|
+| `src/director/parseLLMJson.test.ts` | Fence stripping, truncation salvage, prefill+embedded fence scenarios |
+| `src/director/foundation.test.ts` | Plan validation, mock provider draft, asset validation |
+| `src/director/local.test.ts` | Local planner/drafter, continuity, packToBatchItems |
+| `src/director/templateValidation.test.ts` | validateTemplate rules, adversarial defs, sample def round-trip |
 
-Shadow Motion Studio is currently ready for personal creator use and controlled beta testing.
+**Not covered:** Frontend components, render integration, Electron E2E, LLM live calls.
+
+---
+
+## 14. Current Readiness (v1.1.2)
 
 ### Ready Now
 
-- Local editor UI exists and is usable.
-- Live preview is wired to Remotion Player.
-- 19 templates are implemented.
-- Template fields are editable.
-- Layout, placement, theme, animation speed, and duration are configurable.
-- Export supports WebM, MP4, PNG, and JPG.
-- Transparent WebM workflow is implemented.
-- Platform presets exist for YouTube, Reels/Shorts, and feed formats.
-- Projects can be saved and loaded locally.
-- Batch JSON rendering exists.
-- CLI rendering exists.
-- Electron desktop packaging exists for Windows portable distribution.
-- Runtime config separates dev, server, and packaged paths.
+- Full editor UI with live Remotion preview
+- 19 built-in templates + DynamicTemplate custom templates
+- Property editor, themes, placement, animation speed, duration
+- Export: WebM (transparent), MP4, PNG, JPG; multi-resolution presets
+- Project save/load; batch JSON rendering; CLI render
+- **The Director:** plan, draft, create custom templates, pack save, pack render
+- Anthropic prompt caching + cost meter
+- Custom template CRUD + sidebar integration + Template Library modal
+- Local/offline Director fallback (no API key)
+- Electron portable Windows build (verified build pipeline)
+- Director unit tests (16 passing)
+- Dev API auto-restart on source changes
 
-### Beta-Level Areas
+### Beta-Level / Known Limitations
 
-- The app is local-first and single-user; it does not include accounts, collaboration, cloud sync, or permissions.
-- Error reporting is basic and mostly surfaced as status text or API errors.
-- Batch JSON requires the creator/editor to know the project shape.
-- Theme editing persistence exists at API level, but the UI currently emphasizes built-in theme selection.
-- There is no asset library UI yet, even though an assets directory is prepared.
-- There is no formal onboarding or template documentation inside the app.
-- There is no automated test suite visible in the current package scripts.
-- Cross-platform packaging is not configured beyond the Windows portable target.
-- Export success depends on local Remotion/Chromium/compositor behavior and available system resources.
+- **Single-user, local-only** — no accounts, cloud sync, collaboration
+- **LLM JSON fragility** — planner output can still fail on truncated/fenced JSON despite prefill and salvage; falls back to local planner
+- **Template create requires Anthropic** — OpenAI cannot author new `TemplateDefinition`s
+- **No photographic backgrounds** — gradients, glyphs, text, motion only
+- **No asset library UI** — `assets/` directory exists but no upload workflow
+- **Theme editor** — API persistence exists; UI emphasizes built-in theme pick
+- **Batch JSON** — requires knowing project JSON shape; example at `data/batch-example.json`
+- **Windows portable only** — no macOS/Linux installer configured
+- **No code signing or custom app icon** in current electron-builder config
+- **Transparent WebM** — compatibility varies by NLE and player
+- **Rendering** — CPU/GPU intensive; behavior varies by machine
 
 ### Not Production-SaaS Ready
 
-The app should not be treated as a hosted SaaS or multi-tenant production service. It has no authentication, no database, no queue system, no cloud storage, no job monitoring, and no user isolation. That is consistent with the product direction: this is a local creator tool, not a public rendering platform.
+No authentication, database, queue, cloud storage, job monitoring, or tenant isolation. Consistent with local creator tool positioning.
 
 ### Practical Readiness Rating
 
-- Solo creator daily use: high readiness.
-- Internal editor/agency beta: medium-high readiness.
-- Public paid desktop release: medium readiness, pending installer polish, docs, QA, crash handling, and support flow.
-- Hosted web app: low readiness without major backend, security, storage, and render queue work.
+| Use case | Rating |
+|----------|--------|
+| Solo creator daily use | **High** |
+| Director-assisted pack generation (with API key) | **Medium-high** (beta; occasional LLM parse failures) |
+| Internal editor/agency beta | **Medium-high** |
+| Public paid desktop release | **Medium** — needs icon, signing, QA checklist, release notes |
+| Hosted web SaaS | **Low** — major backend/security/render-queue work required |
 
-## 14. Strengths
+---
 
-The strongest parts of the current project are:
+## 15. Strengths
 
-- Clear niche and creator audience.
-- Strong visual identity.
-- Shared preview/export architecture.
-- Local-first project ownership.
-- Broad template coverage for one creator style.
-- Platform-aware export presets.
-- Batch generation potential.
-- Desktop packaging already started.
+- Clear niche and creator audience
+- Strong, cohesive GTA-inspired visual identity
+- Shared preview/export architecture (built-in + dynamic)
+- Local-first project and pack ownership
+- Broad built-in template coverage
+- **Generative extension** without forking React per template
+- Platform-aware export presets
+- Batch + Director render folders
+- Anthropic caching reduces repeat authoring cost
+- Portable desktop build already shipping
 
-The product has a practical path to becoming a reliable creator utility because it is focused and technically coherent.
+---
 
-## 15. Main Gaps And Risks
+## 16. Main Gaps And Risks
 
-The largest gaps are not core concept gaps; they are productization and workflow gaps.
+### Product / UX gaps
 
-Important gaps:
+- In-app template guide and Director onboarding
+- Sample Director concepts and batch JSON examples in UI
+- Clearer export failure and LLM error messages for non-technical users
+- Theme customization UI
+- Asset upload for logos/profile images
+- Custom app icon and signed installer for distribution
 
-- Documentation needs to catch up with the current 19-template implementation.
-- New users need guidance on what each template is for and how to export correctly.
-- Batch rendering needs example JSON files.
-- Export failures need clearer user-facing recovery messages.
-- The packaged Windows flow needs repeatable QA on clean machines.
-- Theme customization could become more creator-facing.
-- Asset management is not yet exposed as a full workflow.
-- There is no visible automated quality gate for builds or renders.
+### Technical risks
 
-Technical risks:
+- LLM output parsing (truncation, markdown fences) — mitigated but not eliminated
+- Remotion + Electron binary path fragility on upgrades
+- Local API must not be exposed to public networks
+- Director `create` quality depends on model + prompt; validation rejects bad defs but UX on failure is basic
+- API server reuse in dev (“API already running”) can serve stale code until manual restart — mitigated by file watcher in vite-api-plugin
 
-- Rendering is CPU/GPU/resource intensive and can vary by machine.
-- Transparent WebM compatibility varies by editor and playback environment.
-- Electron packaging with Remotion binaries can be fragile if paths change.
-- The local API is intentionally permissive because it is local, but it should not be exposed to a public network.
+---
 
-## 16. Recommended Next Steps
+## 17. Recommended Next Steps
 
-For creator readiness:
+### Creator readiness
 
-- Add an in-app "template guide" or examples panel.
-- Add sample batch JSON files for common workflows.
-- Update the README to match the current 19-template product.
-- Add a short export troubleshooting section.
-- Add a packaged-app smoke test checklist.
+- In-app template guide and Director “example concepts”
+- Export troubleshooting doc (WebM transparency, NLE import)
+- Sample batch JSON and Director pack walkthrough
 
-For product readiness:
+### Product readiness
 
-- Add clearer render progress and failure messages.
-- Add a theme editor UI that saves custom themes.
-- Add asset upload/management if templates need logos, profile images, or backgrounds.
-- Add preset project examples for YouTube, Shorts, and weekly recap workflows.
-- Add basic automated checks for TypeScript build and representative render paths.
+- Render progress UI and structured error codes
+- Theme editor with save
+- Asset library for images (if templates need logos/photos)
+- Preset project examples per platform
 
-For distribution readiness:
+### Distribution readiness (v1.1.x → v1.2)
 
-- Test the portable Windows package on a clean Windows machine.
-- Confirm transparent WebM imports cleanly into target editing software.
-- Decide whether the app remains portable-only or gets a signed installer.
-- Add versioned release notes.
-- Add a backup/export strategy for saved projects and themes.
+- Custom application icon
+- Windows smoke test checklist on clean machine
+- Optional code signing
+- Versioned release notes (`CHANGELOG.md`)
+- Consider NSIS installer alongside portable
+- macOS target (future)
 
-## 17. Overall Assessment
+### Director hardening
 
-Shadow Motion Studio is a focused, useful creator tool with a clear reason to exist. It is strongest as a local motion graphics generator for one creator or a small editing workflow. The core loop is present: select template, edit, preview, export, reuse. The technology choices support that loop well, especially the shared Remotion preview/export model.
+- Continue improving `parseLLMJson` and planner constraints (shorter intents, fewer beats)
+- Integration test with mock provider for full pack → render path
+- Optional image/texture element kind (future schema v2) if photographic backgrounds become a requirement
 
-The project is not yet a polished commercial desktop product, but it is past the concept stage. With documentation, examples, QA, and a little workflow polish, it can become a dependable tool for creators who want a branded cinematic graphics system without the weight of traditional motion design software.
+---
+
+## 18. Version History Snapshot
+
+| Version | Highlights |
+|---------|------------|
+| **1.1.2** (current) | Generative Director v4: DynamicTemplate, custom template registry, Anthropic caching, reuse/create planning, Template Library UI, CostMeter, `backgroundColors` gradients, parseLLMJson hardening, API hot-reload in dev, portable Electron build |
+| Prior | 19 built-in templates, editor, export, batch, Electron packaging foundation |
+
+**Latest release artifact:** `release/ShadowMotionStudio-1.1.2-portable.exe`
+
+---
+
+## 19. Overall Assessment
+
+Shadow Motion Studio v1.1.2 is a focused, useful creator tool with a clear reason to exist. The core loop — select template, edit, preview, export — is solid. The Director adds a meaningful second loop for concept-driven multi-asset production and **runtime template authoring**, which is unusual for a local motion tool at this scale.
+
+It is strongest as a local motion graphics generator for one creator or a small editing workflow. It is past the concept stage and into **beta-ready personal use**, with a shippable Windows portable build. Polishing LLM reliability, onboarding, icons, signing, and QA would move it toward a credible public desktop release.
