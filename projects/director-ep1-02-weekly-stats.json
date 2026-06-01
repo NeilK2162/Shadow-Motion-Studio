@@ -1,0 +1,91 @@
+{
+  "template": "weekly-stats",
+  "fields": {
+    "sizeMultiplier": 1,
+    "aspectMultiplier": 1,
+    "contentScale": 0,
+    "glowIntensity": 0.18,
+    "glowSpread": 85,
+    "glowCenterY": 60,
+    "stitle": "WEEKLY DEBRIEF",
+    "ssub": "Untitled · Week 01",
+    "sweek": "Week 01\nMain Quest Active",
+    "boxes": [
+      {
+        "label": "Shadow Users",
+        "value": "31",
+        "change": "↑ new pilots"
+      },
+      {
+        "label": "RESPECT",
+        "value": "+400",
+        "change": "↑ arc progress"
+      },
+      {
+        "label": "Missions Done",
+        "value": "5 / 7",
+        "change": "↑ grinding"
+      },
+      {
+        "label": "Cash Earned",
+        "value": "₹50K",
+        "change": "↑ momentum"
+      }
+    ],
+    "bars": [
+      {
+        "label": "Coding",
+        "pct": 78
+      },
+      {
+        "label": "Hustle",
+        "pct": 62
+      },
+      {
+        "label": "Network",
+        "pct": 45
+      },
+      {
+        "label": "Content",
+        "pct": 33
+      }
+    ],
+    "stars": 3
+  },
+  "theme": {
+    "gold": "#e8c84a",
+    "goldDim": "#a8902a",
+    "green": "#3d9140",
+    "greenBright": "#5cbf60",
+    "red": "#b02020",
+    "redBright": "#d44040",
+    "dark0": "#000000",
+    "dark1": "#080808",
+    "dark2": "#0f0f0f",
+    "dark3": "#161616",
+    "dark4": "#202020",
+    "dark5": "#2a2a2a",
+    "silver": "#a0a0a0",
+    "text": "#eeeeee",
+    "dim": "#666666",
+    "dimmer": "#333333",
+    "titleFont": "'Bebas Neue', Impact, condensed, sans-serif",
+    "uiFont": "'Oswald', 'Arial Narrow', sans-serif",
+    "monoFont": "'Share Tech Mono', 'Courier New', monospace"
+  },
+  "animation": {
+    "globalSpeed": 1,
+    "durationInFrames": 102
+  },
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "format": "webm",
+    "transparent": true,
+    "stripCardBackground": false
+  },
+  "placement": "center",
+  "formats": [
+    "youtube-landscape"
+  ]
+}

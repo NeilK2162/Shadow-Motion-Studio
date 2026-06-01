@@ -1,0 +1,53 @@
+{
+  "template": "subscribe-prompt",
+  "fields": {
+    "sizeMultiplier": 1,
+    "aspectMultiplier": 1,
+    "contentScale": 0,
+    "glowIntensity": 0.18,
+    "glowSpread": 85,
+    "glowCenterY": 60,
+    "headline": "NEW OBJECTIVE",
+    "action": "SUBSCRIBE",
+    "desc": "Follow the arc",
+    "reward": "+1 RESPECT",
+    "cta": "TAP THE BELL",
+    "pulseCta": true
+  },
+  "theme": {
+    "gold": "#e8c84a",
+    "goldDim": "#a8902a",
+    "green": "#3d9140",
+    "greenBright": "#5cbf60",
+    "red": "#b02020",
+    "redBright": "#d44040",
+    "dark0": "#000000",
+    "dark1": "#080808",
+    "dark2": "#0f0f0f",
+    "dark3": "#161616",
+    "dark4": "#202020",
+    "dark5": "#2a2a2a",
+    "silver": "#a0a0a0",
+    "text": "#eeeeee",
+    "dim": "#666666",
+    "dimmer": "#333333",
+    "titleFont": "'Bebas Neue', Impact, condensed, sans-serif",
+    "uiFont": "'Oswald', 'Arial Narrow', sans-serif",
+    "monoFont": "'Share Tech Mono', 'Courier New', monospace"
+  },
+  "animation": {
+    "globalSpeed": 1,
+    "durationInFrames": 120
+  },
+  "export": {
+    "resolution": "1920x1080",
+    "fps": 30,
+    "format": "webm",
+    "transparent": true,
+    "stripCardBackground": false
+  },
+  "placement": "bottom-center",
+  "formats": [
+    "youtube-landscape"
+  ]
+}

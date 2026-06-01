@@ -1,17 +1,40 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import net from 'node:net';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import type { Plugin } from 'vite';
 
 const API_PORT = 3456;
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const require = createRequire(import.meta.url);
+const TSX_CLI = require.resolve('tsx/cli');
+const SERVER_ENTRY = path.join(ROOT, 'src', 'server', 'index.ts');
 
-async function isApiRunning(port = API_PORT): Promise<boolean> {
+function isPortOpen(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = net.connect({ port, host: '127.0.0.1' });
+    const done = (open: boolean) => {
+      socket.removeAllListeners();
+      socket.destroy();
+      resolve(open);
+    };
+    socket.once('connect', () => done(true));
+    socket.once('error', () => done(false));
+    socket.setTimeout(500, () => done(false));
+  });
+}
+
+async function probeApi(port = API_PORT): Promise<'running' | 'blocked' | 'free'> {
+  if (!(await isPortOpen(port))) return 'free';
   try {
     const res = await fetch(`http://127.0.0.1:${port}/api/director/settings`, {
       signal: AbortSignal.timeout(800),
     });
-    // Any HTTP response from Express means our API (or compatible server) is up.
-    return res.ok || res.status === 404 || res.status === 500;
+    if (res.ok || res.status === 404 || res.status === 500) return 'running';
+    return 'blocked';
   } catch {
-    return false;
+    return 'blocked';
   }
 }
 
@@ -22,10 +45,10 @@ export function apiServerPlugin(): Plugin {
 
   function start() {
     if (proc) return;
-    const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-    proc = spawn(npm, ['run', 'server'], {
+    // Spawn node + tsx directly — avoids Windows EINVAL from npm.cmd without shell.
+    proc = spawn(process.execPath, [TSX_CLI, SERVER_ENTRY], {
+      cwd: ROOT,
       stdio: 'inherit',
-      shell: false,
       env: process.env,
     });
     weStarted = true;
@@ -47,8 +70,16 @@ export function apiServerPlugin(): Plugin {
     name: 'shadow-api-server',
     configureServer(server) {
       void (async () => {
-        if (await isApiRunning()) {
+        const state = await probeApi();
+        if (state === 'running') {
           console.log(`[shadow-api] API already running on http://localhost:${API_PORT} — reusing it`);
+          return;
+        }
+        if (state === 'blocked') {
+          console.warn(
+            `[shadow-api] Port ${API_PORT} is in use by another process. Free it, then restart dev:\n` +
+              `  Get-NetTCPConnection -LocalPort ${API_PORT} | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`,
+          );
           return;
         }
         console.log(`[shadow-api] Starting API on http://localhost:${API_PORT}…`);
