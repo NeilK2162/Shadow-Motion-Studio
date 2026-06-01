@@ -1,6 +1,11 @@
 export const MODEL_DEFAULTS = {
   openai: 'gpt-4o-mini',
-  anthropic: 'claude-3-5-haiku-20241022',
+  anthropic: 'claude-haiku-4-5-20251001',
+} as const;
+
+export const QUALITY_MODELS = {
+  openai: 'gpt-4o',
+  anthropic: 'claude-sonnet-4-6',
 } as const;
 
 export const MAX_BEATS = 7;

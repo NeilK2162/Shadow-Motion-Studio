@@ -5,7 +5,7 @@ import { getExportsDir } from '../lib/runtimeConfig';
 import { renderBatch } from '../renderer/render';
 import { createDefaultProject } from '../remotion/inputProps';
 import type { Project } from '../types';
-import { MAX_BEATS, MAX_REPAIR_ATTEMPTS, MODEL_DEFAULTS, TOKEN_LIMITS } from './config';
+import { MAX_BEATS, MAX_REPAIR_ATTEMPTS, MODEL_DEFAULTS, QUALITY_MODELS, TOKEN_LIMITS } from './config';
 import { localDraft } from './local/drafter';
 import { localPlan } from './local/planner';
 import { compressSeriesContext, readSeries, writeSeries } from './memory';
@@ -100,9 +100,9 @@ async function runPlan(
 
   const model =
     qualityMode && provider.name === 'openai'
-      ? 'gpt-4o'
+      ? QUALITY_MODELS.openai
       : qualityMode && provider.name === 'anthropic'
-        ? 'claude-3-5-sonnet-20241022'
+        ? QUALITY_MODELS.anthropic
         : undefined;
 
   const { data, usage } = await provider.complete<{ beats: DirectorPlan['beats']; reasoning?: string }>({

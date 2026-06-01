@@ -9,8 +9,8 @@ interface ModelPricing {
 const PRICING: Record<string, ModelPricing> = {
   'gpt-4o-mini': { inputPer1M: 0.15, outputPer1M: 0.6, cachedInputPer1M: 0.075 },
   'gpt-4o': { inputPer1M: 2.5, outputPer1M: 10, cachedInputPer1M: 1.25 },
-  'claude-3-5-haiku-20241022': { inputPer1M: 0.8, outputPer1M: 4, cachedInputPer1M: 0.08 },
-  'claude-3-5-sonnet-20241022': { inputPer1M: 3, outputPer1M: 15, cachedInputPer1M: 0.3 },
+  'claude-haiku-4-5-20251001': { inputPer1M: 1, outputPer1M: 5, cachedInputPer1M: 0.1 },
+  'claude-sonnet-4-6': { inputPer1M: 3, outputPer1M: 15, cachedInputPer1M: 0.3 },
 };
 
 export function estimateCost(
