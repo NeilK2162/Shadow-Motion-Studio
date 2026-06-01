@@ -9,6 +9,9 @@ const resourcesDir = isPackaged ? process.resourcesPath : path.resolve(__dirname
 
 const staticDir = path.join(resourcesDir, 'dist');
 const remotionBundleDir = path.join(resourcesDir, 'dist-remotion');
+const compositorBinDir = isPackaged
+  ? path.join(process.resourcesPath, 'app.asar.unpacked', 'node_modules', '@remotion', 'compositor-win32-x64-msvc')
+  : null;
 
 let server: RunningServer | null = null;
 let mainWindow: BrowserWindow | null = null;
@@ -22,6 +25,8 @@ async function createWindow(): Promise<void> {
     dataDir,
     staticDir: existsSync(staticDir) ? staticDir : null,
     serveUrl: existsSync(remotionBundleDir) ? remotionBundleDir : null,
+    binariesDirectory:
+      compositorBinDir && existsSync(path.join(compositorBinDir, 'remotion.exe')) ? compositorBinDir : null,
   });
 
   mainWindow = new BrowserWindow({

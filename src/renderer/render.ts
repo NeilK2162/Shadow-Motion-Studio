@@ -7,7 +7,7 @@ import { getFormat } from '../lib/formats';
 import type { Project } from '../types';
 import { RESOLUTION_MAP } from '../types';
 import { getDefaultFields } from '../data/templateDefaults';
-import { getExportsDir, getServeUrl } from '../lib/runtimeConfig';
+import { getBinariesDirectory, getExportsDir, getServeUrl } from '../lib/runtimeConfig';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -74,11 +74,13 @@ export async function renderProject(project: Project, outputDir?: string): Promi
   const serveUrl = await getBundle();
   const inputProps = projectToInputProps(project);
   const compositionId = project.template;
+  const binariesDirectory = getBinariesDirectory();
 
   const composition = await selectComposition({
     serveUrl,
     id: compositionId,
     inputProps,
+    binariesDirectory,
   });
 
   const exportsDir = outputDir ?? getExportsDir();
@@ -106,6 +108,7 @@ export async function renderProject(project: Project, outputDir?: string): Promi
       output: outputPath,
       imageFormat: project.export.format === 'jpg' ? 'jpeg' : project.export.format,
       frame: project.animation.durationInFrames - 1,
+      binariesDirectory,
     });
     return outputPath;
   }
@@ -120,6 +123,7 @@ export async function renderProject(project: Project, outputDir?: string): Promi
     outputLocation: outputPath,
     pixelFormat: transparent ? 'yuva420p' : 'yuv420p',
     imageFormat: transparent ? 'png' : undefined,
+    binariesDirectory,
   });
 
   return outputPath;

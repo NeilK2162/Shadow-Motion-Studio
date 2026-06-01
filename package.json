@@ -1,7 +1,7 @@
 {
   "name": "shadow-motion-studio",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.1",
   "type": "module",
   "main": "dist-electron/main.cjs",
   "scripts": {
@@ -55,7 +55,8 @@
     },
     "files": [
       "dist-electron/**/*",
-      "package.json"
+      "package.json",
+      "node_modules/**/*"
     ],
     "extraResources": [
       {

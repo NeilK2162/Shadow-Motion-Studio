@@ -21,6 +21,8 @@ export interface StartServerOptions {
   dataDir?: string;
   /** Pre-built Remotion bundle dir (production). */
   serveUrl?: string | null;
+  /** Remotion compositor/ffmpeg binaries dir (packaged Electron). */
+  binariesDirectory?: string | null;
   /** Built frontend dir to serve as static (dist). */
   staticDir?: string | null;
 }
@@ -39,7 +41,11 @@ async function ensureDirs(): Promise<void> {
 }
 
 export async function startServer(options: StartServerOptions = {}): Promise<RunningServer> {
-  configureRuntime({ dataDir: options.dataDir, serveUrl: options.serveUrl });
+  configureRuntime({
+    dataDir: options.dataDir,
+    serveUrl: options.serveUrl,
+    binariesDirectory: options.binariesDirectory,
+  });
   await ensureDirs();
 
   const app = express();
