@@ -12,6 +12,8 @@ export interface LLMCompleteArgs {
   cacheableSystem?: boolean;
   systemBlocks?: SystemBlock[];
   model?: string;
+  /** Anthropic assistant-turn prefill — forces the response to start with this string. */
+  prefill?: string;
 }
 
 export interface LLMProvider {

@@ -13,9 +13,9 @@ export const MAX_REPAIR_ATTEMPTS = 2;
 export const DEFAULT_SESSION_TOKEN_BUDGET = 50_000;
 
 export const TOKEN_LIMITS = {
-  plan: 300,
-  draft: 1600,
-  repair: 500,
+  plan: 2048,
+  draft: 2048,
+  repair: 1024,
   create: 4096,
   createRepair: 4096,
 } as const;

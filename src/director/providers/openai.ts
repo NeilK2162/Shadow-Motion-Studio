@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { MODEL_DEFAULTS } from '../config';
+import { parseLLMJson } from '../parseLLMJson';
 import { estimateCost } from '../pricing';
 import type { DirectorSettings } from '../types';
 import type { LLMCompleteArgs, LLMProvider } from './types';
@@ -33,13 +34,7 @@ export class OpenAIProvider implements LLMProvider {
     const cachedInputTokens =
       (usage as { prompt_tokens_details?: { cached_tokens?: number } })?.prompt_tokens_details?.cached_tokens ?? 0;
 
-    let data: T;
-    try {
-      data = JSON.parse(text) as T;
-    } catch {
-      const match = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-      data = JSON.parse(match?.[0] ?? '{}') as T;
-    }
+    const data = parseLLMJson<T>(text);
 
     return {
       data,

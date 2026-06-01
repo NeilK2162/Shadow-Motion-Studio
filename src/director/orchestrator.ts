@@ -176,16 +176,26 @@ async function runPlan(
 
   const registryNote = customNames.length ? `\nCUSTOM TEMPLATES ALREADY SAVED:\n${customNames.join(', ')}` : '';
 
-  const { data, usage } = await provider.complete<{ beats: DirectorPlan['beats']; reasoning?: string }>({
-    system: PLANNER_SYSTEM + registryNote,
-    user: buildPlannerUser(concept, voice, seriesContext, formatTarget),
-    maxTokens: TOKEN_LIMITS.plan,
-    cacheableSystem: true,
-    model,
-  });
+  try {
+    const { data, usage } = await provider.complete<{ beats: DirectorPlan['beats']; reasoning?: string }>({
+      system: PLANNER_SYSTEM + registryNote,
+      user: buildPlannerUser(concept, voice, seriesContext, formatTarget),
+      maxTokens: TOKEN_LIMITS.plan,
+      cacheableSystem: true,
+      model,
+      prefill: '{"beats":[',
+    });
 
-  const plan: DirectorPlan = { beats: normalizeBeats(data.beats ?? []), reasoning: data.reasoning };
-  return { plan, usage, step: { step: 'plan', usage } };
+    const plan: DirectorPlan = { beats: normalizeBeats(data.beats ?? []), reasoning: data.reasoning };
+    if (plan.beats.length < 3) {
+      throw new Error(`Plan returned only ${plan.beats.length} beats`);
+    }
+    return { plan, usage, step: { step: 'plan', usage } };
+  } catch (error) {
+    console.warn('[director] Plan LLM failed, using local planner:', error);
+    const plan = localPlan(concept, formatTarget, memory);
+    return { plan, usage: emptyUsage(), step: { step: 'plan', usage: emptyUsage() } };
+  }
 }
 
 async function createTemplate(
@@ -214,15 +224,21 @@ async function createTemplate(
 
   const authorModel = provider.name === 'anthropic' ? MODEL_DEFAULTS.anthropic : undefined;
 
-  const { data: rawDef, usage: createUsage } = await provider.complete<TemplateDefinition>({
-    system: systemFallback,
-    systemBlocks: provider.name === 'anthropic' ? systemBlocks : undefined,
-    user,
-    maxTokens: TOKEN_LIMITS.create,
-    model: authorModel,
-  });
-  cumulative = mergeUsage(cumulative, createUsage);
-  steps.push({ step: 'create', usage: createUsage });
+  let rawDef: TemplateDefinition;
+  try {
+    const created = await provider.complete<TemplateDefinition>({
+      system: systemFallback,
+      systemBlocks: provider.name === 'anthropic' ? systemBlocks : undefined,
+      user,
+      maxTokens: TOKEN_LIMITS.create,
+      model: authorModel,
+    });
+    cumulative = mergeUsage(cumulative, created.usage);
+    steps.push({ step: 'create', usage: created.usage });
+    rawDef = created.data;
+  } catch {
+    return null;
+  }
 
   let def = rawDef;
   if (!def.id || def.id === 'sample-mission-passed') {
@@ -232,21 +248,25 @@ async function createTemplate(
 
   let validation = validateTemplate(def);
   if (!validation.valid) {
-    const { data: repaired, usage: repairUsage } = await provider.complete<TemplateDefinition>({
-      system: systemFallback,
-      systemBlocks: provider.name === 'anthropic' ? systemBlocks : undefined,
-      user: buildAuthorRepairUserMessage({
-        errors: validation.errors.map((e) => `${e.path}: ${e.message}`),
-        previousJson: def,
-        beatIntent: beat.intent,
-      }),
-      maxTokens: TOKEN_LIMITS.createRepair,
-      model: authorModel,
-    });
-    cumulative = mergeUsage(cumulative, repairUsage);
-    steps.push({ step: 'create_repair', usage: repairUsage });
-    def = repaired;
-    validation = validateTemplate(def);
+    try {
+      const repaired = await provider.complete<TemplateDefinition>({
+        system: systemFallback,
+        systemBlocks: provider.name === 'anthropic' ? systemBlocks : undefined,
+        user: buildAuthorRepairUserMessage({
+          errors: validation.errors.map((e) => `${e.path}: ${e.message}`),
+          previousJson: def,
+          beatIntent: beat.intent,
+        }),
+        maxTokens: TOKEN_LIMITS.createRepair,
+        model: authorModel,
+      });
+      cumulative = mergeUsage(cumulative, repaired.usage);
+      steps.push({ step: 'create_repair', usage: repaired.usage });
+      def = repaired.data;
+      validation = validateTemplate(def);
+    } catch {
+      return null;
+    }
   }
 
   if (!validation.valid) return null;
@@ -277,12 +297,24 @@ async function fillCustomFields(
 
   const { data, usage } = await provider.complete<{ fields: Record<string, unknown> }>({
     system: DRAFTER_SYSTEM,
-    user: `${buildDrafterUser([beat], voice, seriesContext, schemaText)}\nTemplate id: ${def.id}. Output ONLY { "fields": { ... } }`,
+    user: `VOICE: ${voice.description}
+${seriesContext}
+BEAT: ${JSON.stringify(beat)}
+FIELD SCHEMA (fill every key):
+${schemaText}
+Template id: ${def.id}
+Output ONLY {"fields":{...}}`,
     maxTokens: TOKEN_LIMITS.draft,
     cacheableSystem: true,
+    prefill: '{"fields":{',
   });
 
-  const fields = (data as { fields?: Record<string, unknown> }).fields ?? (data as unknown as Record<string, unknown>);
+  const fields =
+    data && typeof data === 'object' && 'fields' in data && data.fields && typeof data.fields === 'object'
+      ? (data.fields as Record<string, unknown>)
+      : data && typeof data === 'object' && !Array.isArray(data)
+        ? (data as Record<string, unknown>)
+        : {};
   return { fields: { ...fieldsFromDef(def), ...fields }, usage, step: { step: 'draft', usage } };
 }
 
@@ -307,17 +339,24 @@ async function runDraft(
     return { entries, usage: emptyUsage(), step: { step: 'draft', usage: emptyUsage() } };
   }
 
-  const { data, usage } = await provider.complete<Array<{ template: string; fields: Record<string, unknown> }>>({
-    system: DRAFTER_SYSTEM,
-    user: buildDrafterUser(reuseBeats, voice, seriesContext, schemasText),
-    maxTokens: TOKEN_LIMITS.draft,
-    cacheableSystem: true,
-  });
+  try {
+    const { data, usage } = await provider.complete<Array<{ template: string; fields: Record<string, unknown> }>>({
+      system: DRAFTER_SYSTEM,
+      user: buildDrafterUser(reuseBeats, voice, seriesContext, schemasText),
+      maxTokens: TOKEN_LIMITS.draft,
+      cacheableSystem: true,
+      prefill: '[',
+    });
 
-  const entries: Array<{ template: string; fields: Record<string, unknown> }> = Array.isArray(data)
-    ? data
-    : ((data as { assets?: Array<{ template: string; fields: Record<string, unknown> }> }).assets ?? []);
-  return { entries, usage, step: { step: 'draft', usage } };
+    const entries: Array<{ template: string; fields: Record<string, unknown> }> = Array.isArray(data)
+      ? data
+      : ((data as { assets?: Array<{ template: string; fields: Record<string, unknown> }> }).assets ?? []);
+    return { entries, usage, step: { step: 'draft', usage } };
+  } catch (error) {
+    console.warn('[director] Draft LLM failed, using local drafter:', error);
+    const entries = localDraft(reuseBeats, memory, voice);
+    return { entries, usage: emptyUsage(), step: { step: 'draft', usage: emptyUsage() } };
+  }
 }
 
 async function runRepair(
@@ -332,6 +371,7 @@ async function runRepair(
     user: buildRepairUser(errors, invalidEntries, schemasText),
     maxTokens: TOKEN_LIMITS.repair,
     cacheableSystem: true,
+    prefill: '[',
   });
   const entries = Array.isArray(data) ? data : [];
   return { entries, usage, step: { step: 'repair', usage } };

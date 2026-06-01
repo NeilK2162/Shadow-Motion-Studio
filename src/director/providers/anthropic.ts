@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { MODEL_DEFAULTS } from '../config';
+import { parseLLMJson } from '../parseLLMJson';
 import { estimateCost } from '../pricing';
 import type { DirectorSettings } from '../types';
 import type { LLMCompleteArgs, LLMProvider } from './types';
@@ -48,41 +49,60 @@ export class AnthropicProvider implements LLMProvider {
       systemBlocks = [{ type: 'text', text: args.system }];
     }
 
-    const response = await this.client.messages.create({
-      model,
-      max_tokens: args.maxTokens,
-      system: systemBlocks,
-      messages: [{ role: 'user', content: args.user }],
-    });
+    let maxTokens = args.maxTokens;
+    let lastError: unknown;
 
-    const textBlock = response.content.find((b) => b.type === 'text');
-    const text = textBlock && 'text' in textBlock ? textBlock.text : '{}';
-    const usage = response.usage;
-    const inputTokens = usage.input_tokens;
-    const outputTokens = usage.output_tokens;
-    const cachedInputTokens =
-      (usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0;
-    const cacheWriteTokens =
-      (usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens ?? 0;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const messages: Anthropic.Messages.MessageParam[] = [
+        { role: 'user', content: args.user },
+      ];
+      if (args.prefill) {
+        messages.push({ role: 'assistant', content: args.prefill });
+      }
 
-    let data: T;
-    try {
-      data = JSON.parse(text) as T;
-    } catch {
-      const match = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-      data = JSON.parse(match?.[0] ?? '{}') as T;
+      const response = await this.client.messages.create({
+        model,
+        max_tokens: maxTokens,
+        system: systemBlocks,
+        messages,
+      });
+
+      const textBlock = response.content.find((b) => b.type === 'text');
+      const rawText = textBlock && 'text' in textBlock ? textBlock.text : '{}';
+      // Prepend the prefill so parseLLMJson sees a complete JSON string.
+      const text = args.prefill ? args.prefill + rawText : rawText;
+      const usage = response.usage;
+      const inputTokens = usage.input_tokens;
+      const outputTokens = usage.output_tokens;
+      const cachedInputTokens =
+        (usage as { cache_read_input_tokens?: number }).cache_read_input_tokens ?? 0;
+      const cacheWriteTokens =
+        (usage as { cache_creation_input_tokens?: number }).cache_creation_input_tokens ?? 0;
+
+      const truncated = response.stop_reason === 'max_tokens';
+
+      try {
+        const data = parseLLMJson<T>(text);
+        return {
+          data,
+          usage: {
+            inputTokens,
+            outputTokens,
+            cachedInputTokens,
+            cacheWriteTokens,
+            estimatedCostUsd: estimateCost(model, inputTokens, outputTokens, cachedInputTokens, cacheWriteTokens),
+          },
+        };
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2 && (truncated || attempt === 0)) {
+          maxTokens = Math.min(maxTokens * 2, 4096);
+          continue;
+        }
+      }
     }
 
-    return {
-      data,
-      usage: {
-        inputTokens,
-        outputTokens,
-        cachedInputTokens,
-        cacheWriteTokens,
-        estimatedCostUsd: estimateCost(model, inputTokens, outputTokens, cachedInputTokens, cacheWriteTokens),
-      },
-    };
+    throw lastError instanceof Error ? lastError : new Error('LLM request failed after retries');
   }
 }
 

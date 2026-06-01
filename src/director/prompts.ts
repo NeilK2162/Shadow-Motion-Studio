@@ -14,8 +14,9 @@ Open with chapter-card if the concept implies a new episode/section.
 End with subscribe-prompt only for YouTube concepts.
 Maintain series continuity using SERIES CONTEXT. Match VOICE.
 
-Output ONLY JSON:
-{ "beats": [{ "template": "<id or slug>", "intent": "<line>", "mode": "reuse"|"create", "customName": "<when create>" }] }
+Output ONLY raw JSON on one line if possible (NO markdown fences, NO prose):
+{"beats":[{"template":"<id>","intent":"<max 32 chars>","mode":"reuse"|"create"}]}
+Rules: 3-5 beats max. Each intent <= 32 characters. Omit customName unless mode is create.
 
 BUILT-IN REGISTRY:
 ${serializeRegistry()}`;
