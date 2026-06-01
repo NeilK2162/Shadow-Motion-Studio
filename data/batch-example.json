@@ -1,0 +1,16 @@
+[
+  {
+    "template": "mission-passed",
+    "fields": {
+      "sub": "FIRST AI CLIENT CLOSED",
+      "resp": "RESPECT +500"
+    }
+  },
+  {
+    "template": "chapter-card",
+    "fields": {
+      "titleLine2": "MOVING TO PUNE",
+      "badge": "PUNE, MH"
+    }
+  }
+]

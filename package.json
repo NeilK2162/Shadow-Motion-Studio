@@ -1,0 +1,39 @@
+{
+  "name": "shadow-motion-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "render": "tsx src/renderer/render-cli.ts",
+    "server": "tsx src/server/index.ts"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.272",
+    "@remotion/player": "^4.0.272",
+    "@remotion/renderer": "^4.0.272",
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "lucide-react": "^0.469.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.272",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^22.10.5",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.19.2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.5"
+  }
+}

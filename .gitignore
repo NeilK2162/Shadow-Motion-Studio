@@ -1,2 +1,6 @@
-content_kit_GTA_STYLE.html
+node_modules
+dist
+exports
+.DS_Store
+*.local
 .env

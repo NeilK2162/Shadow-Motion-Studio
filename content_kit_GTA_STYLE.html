@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shadow Owner · Content Kit v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --gold: #e8c84a;
+  --gold-dim: #a8902a;
+  --green: #3d9140;
+  --green-bright: #5cbf60;
+  --red: #b02020;
+  --red-bright: #d44040;
+  --dark0: #000000;
+  --dark1: #080808;
+  --dark2: #0f0f0f;
+  --dark3: #161616;
+  --dark4: #202020;
+  --dark5: #2a2a2a;
+  --silver: #a0a0a0;
+  --text: #eeeeee;
+  --dim: #666666;
+  --dimmer: #333333;
+  --title: 'Bebas Neue', Impact, condensed, sans-serif;
+  --ui: 'Oswald', 'Arial Narrow', sans-serif;
+  --mono: 'Share Tech Mono', 'Courier New', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--dark1);
+  color: var(--text);
+  font-family: var(--ui);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════
+   LOADER
+═══════════════════════════════════ */
+#loader {
+  position: fixed; inset: 0;
+  background: #000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  padding-bottom: 52px;
+  z-index: 9999;
+  transition: opacity 0.6s ease;
+}
+
+.loader-sky {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    #08091a 0%, #0d1528 30%, #0a0f20 60%, #04060f 85%, #000 100%);
+}
+
+/* SVG city skyline */
+.loader-skyline {
+  position: absolute;
+  bottom: 70px; left: 0; right: 0;
+  height: 180px;
+}
+
+.loader-ground {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 72px;
+  background: var(--dark0);
+}
+
+.loader-glow {
+  position: absolute;
+  bottom: 160px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 120px;
+  background: radial-gradient(ellipse, rgba(232,200,74,0.04) 0%, transparent 70%);
+}
+
+.loader-content {
+  position: relative; z-index: 2;
+  width: 340px; text-align: center;
+}
+
+.loader-title {
+  font-family: var(--title);
+  font-size: 14px; letter-spacing: 8px;
+  color: var(--gold); opacity: 0.6;
+  margin-bottom: 32px;
+}
+
+.loader-bar-wrap {
+  margin-bottom: 14px;
+}
+
+.loader-bar-labels {
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); letter-spacing: 3px;
+  margin-bottom: 6px; text-transform: uppercase;
+}
+
+.loader-bar {
+  width: 100%; height: 2px;
+  background: var(--dark4);
+  overflow: hidden;
+}
+
+.loader-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  animation: loaderProg 2.4s cubic-bezier(.2,.8,.4,1) forwards;
+  width: 0;
+}
+
+.loader-tip {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--dim); line-height: 1.7;
+  letter-spacing: 0.5px;
+}
+
+.loader-tip em { color: var(--gold); font-style: normal; }
+
+/* ═══════════════════════════════════
+   APP SHELL
+═══════════════════════════════════ */
+#app {
+  max-width: 860px; margin: 0 auto;
+  padding: 32px 20px 60px;
+  opacity: 0; transition: opacity 0.6s;
+}
+#app.show { opacity: 1; }
+
+/* Header */
+.kit-header {
+  text-align: center;
+  padding-bottom: 28px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--dark4);
+  position: relative;
+}
+
+.kit-header::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 50%; transform: translateX(-50%);
+  width: 80px; height: 1px; background: var(--gold);
+}
+
+.kit-header h1 {
+  font-family: var(--title);
+  font-size: 38px; letter-spacing: 5px;
+  color: var(--gold); line-height: 1;
+}
+
+.kit-header p {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--dim); letter-spacing: 3px;
+  margin-top: 8px; text-transform: uppercase;
+}
+
+/* Tabs */
+.tabs {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 1.5px; padding: 7px 13px;
+  background: var(--dark2); border: 1px solid var(--dark5);
+  color: var(--dim); cursor: pointer;
+  transition: all 0.15s; text-transform: uppercase;
+  white-space: nowrap; user-select: none;
+}
+.tab:hover { border-color: var(--dim); color: var(--silver); }
+.tab.on { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 700; }
+
+/* Preview stage */
+.stage {
+  background: var(--dark0);
+  border: 1px solid var(--dark3);
+  min-height: 480px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.replay-btn {
+  position: absolute; top: 14px; right: 14px;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); background: transparent;
+  border: 1px solid var(--dark5); padding: 6px 12px;
+  cursor: pointer; letter-spacing: 2px;
+  text-transform: uppercase; transition: all 0.2s; z-index: 20;
+}
+.replay-btn:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+.stage-note {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dimmer); letter-spacing: 2px;
+  text-align: center; padding: 10px;
+  text-transform: uppercase;
+}
+.stage-note em { color: var(--gold); font-style: normal; }
+
+/* Card wrapper */
+.cw { display: none; align-items: center; justify-content: center; width: 100%; padding: 32px; }
+.cw.on { display: flex; }
+
+/* ═══════════════════════════════════
+   CARD 1 · MISSION PASSED
+═══════════════════════════════════ */
+.c-passed {
+  width: 540px; height: 360px;
+  background: linear-gradient(135deg, #050f05 0%, #030a03 100%);
+  border: 1px solid #1a341a;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.c-passed .scan {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 0%, var(--green-bright) 50%, transparent 100%);
+  animation: scanAnim 0.8s ease-out;
+}
+.c-passed .glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(60,160,60,0.12) 0%, transparent 65%);
+}
+.c-passed .check {
+  font-size: 44px; color: var(--green-bright);
+  animation: popIn 0.35s ease-out; position: relative;
+  text-shadow: 0 0 20px rgba(90,200,90,0.4);
+}
+.c-passed .label {
+  position: relative;
+  font-family: var(--title); font-size: 64px;
+  letter-spacing: 6px; color: #fff; line-height: 1;
+  animation: slideUp 0.4s ease-out 0.15s both;
+}
+.c-passed .label span { color: var(--green-bright); }
+.c-passed .sub {
+  position: relative;
+  font-family: var(--mono); font-size: 11px;
+  color: #888; letter-spacing: 2px; margin-top: 10px;
+  animation: slideUp 0.4s ease-out 0.3s both;
+}
+.c-passed .resp {
+  position: relative;
+  font-family: var(--ui); font-weight: 600;
+  font-size: 17px; color: var(--gold); letter-spacing: 4px;
+  margin-top: 20px; animation: slideUp 0.4s ease-out 0.45s both;
+}
+.c-passed .row {
+  position: relative;
+  display: flex; gap: 36px; margin-top: 16px;
+  animation: slideUp 0.4s ease-out 0.6s both;
+}
+.c-passed .st { text-align: center; }
+.c-passed .sv { font-family: var(--title); font-size: 20px; color: var(--gold); letter-spacing: 2px; }
+.c-passed .sl { font-family: var(--mono); font-size: 8px; color: var(--dim); letter-spacing: 1px; margin-top: 2px; }
+
+/* ═══════════════════════════════════
+   CARD 2 · MISSION FAILED
+═══════════════════════════════════ */
+.c-failed {
+  width: 540px; height: 360px;
+  background: linear-gradient(135deg, #100404 0%, #0a0202 100%);
+  border: 1px solid #380e0e;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.c-failed .scan {
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--red-bright), transparent);
+  animation: scanAnim 0.8s ease-out;
+}
+.c-failed .glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, rgba(180,30,30,0.12) 0%, transparent 65%);
+}
+.c-failed .cross {
+  font-size: 44px; color: var(--red-bright);
+  animation: popIn 0.35s ease-out; position: relative;
+  text-shadow: 0 0 20px rgba(200,60,60,0.4);
+}
+.c-failed .label {
+  position: relative;
+  font-family: var(--title); font-size: 64px;
+  letter-spacing: 6px; color: #fff; line-height: 1;
+  animation: slideUp 0.4s ease-out 0.15s both;
+}
+.c-failed .label span { color: var(--red-bright); }
+.c-failed .sub {
+  position: relative;
+  font-family: var(--mono); font-size: 11px;
+  color: #888; letter-spacing: 2px; margin-top: 10px;
+  animation: slideUp 0.4s ease-out 0.3s both;
+}
+.c-failed .cause {
+  position: relative;
+  font-family: var(--mono); font-size: 10px;
+  color: #555; letter-spacing: 1px; margin-top: 12px;
+  animation: slideUp 0.4s ease-out 0.45s both;
+}
+.c-failed .retry {
+  position: relative;
+  font-family: var(--ui); font-weight: 600;
+  font-size: 14px; color: var(--red-bright);
+  letter-spacing: 4px; margin-top: 20px;
+  animation: slideUp 0.4s ease-out 0.6s both; text-transform: uppercase;
+}
+
+/* ═══════════════════════════════════
+   CARD 3 · CHAPTER TITLE
+═══════════════════════════════════ */
+.c-chapter {
+  width: 560px; height: 360px;
+  background: #000; position: relative; overflow: hidden;
+  padding: 44px 48px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.c-chapter .bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(125deg, #0c0c18 0%, #060608 55%, #000 100%);
+}
+.c-chapter .grain {
+  position: absolute; inset: 0; opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+.c-chapter .num {
+  position: relative;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--gold); letter-spacing: 5px; text-transform: uppercase;
+  margin-bottom: 14px; animation: fadeL 0.5s ease-out 0.1s both;
+}
+.c-chapter .line {
+  position: relative; width: 0; height: 1px;
+  background: var(--gold); margin-bottom: 24px;
+  animation: expandLine 0.5s ease-out 0.3s both;
+}
+.c-chapter .ctitle {
+  position: relative;
+  font-family: var(--title); font-size: 56px;
+  color: #fff; line-height: 0.9; letter-spacing: 3px;
+  animation: fadeL 0.5s ease-out 0.4s both;
+}
+.c-chapter .csub {
+  position: relative;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); letter-spacing: 2.5px; margin-top: 22px;
+  animation: fadeL 0.5s ease-out 0.6s both; text-transform: uppercase;
+}
+.c-chapter .badge {
+  position: absolute; bottom: 24px; right: 28px;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--gold); letter-spacing: 1px;
+  border: 1px solid var(--dark5); padding: 4px 10px;
+  animation: fadeR 0.5s ease-out 0.7s both;
+}
+
+/* ═══════════════════════════════════
+   CARD 4 · LOADING SCREEN
+═══════════════════════════════════ */
+.c-loading {
+  width: 560px; height: 360px;
+  background: #000; position: relative; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+.c-loading .sky {
+  position: absolute; inset: 0;
+  background: linear-gradient(180deg, #08091a 0%, #040510 60%, #000 100%);
+}
+.c-loading .big-text {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -60%);
+  font-family: var(--title); font-size: 60px; letter-spacing: 12px;
+  color: var(--gold); opacity: 0.06; white-space: nowrap;
+  user-select: none;
+}
+.c-loading .skyline-svg {
+  position: absolute; bottom: 68px; left: 0; right: 0;
+}
+.c-loading .bottom {
+  position: relative; z-index: 2;
+  padding: 14px 24px 20px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.95) 20%);
+  border-top: 1px solid #111;
+}
+.c-loading .bar-head {
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); letter-spacing: 3px;
+  margin-bottom: 7px; text-transform: uppercase;
+}
+.c-loading .bar {
+  width: 100%; height: 2px;
+  background: var(--dark4); overflow: hidden; margin-bottom: 12px;
+}
+.c-loading .fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  animation: lFill 1.8s ease-out forwards; width: 0;
+}
+.c-loading .tip {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--dim); line-height: 1.65;
+}
+.c-loading .tip em { color: var(--gold); font-style: normal; }
+
+/* ═══════════════════════════════════
+   CARD 5 · SIDE QUEST
+═══════════════════════════════════ */
+.c-quest {
+  width: 480px;
+  background: var(--dark2);
+  border: 1px solid var(--dark5);
+  border-left: 3px solid var(--gold);
+  padding: 26px;
+  animation: slideR 0.4s ease-out;
+}
+.c-quest .qtag {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--gold); letter-spacing: 3px;
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+  text-transform: uppercase;
+}
+.c-quest .qtag::before { content: '◈'; font-size: 11px; }
+.c-quest .qtitle {
+  font-family: var(--title); font-size: 34px;
+  color: #fff; letter-spacing: 2px; line-height: 1; margin-bottom: 10px;
+}
+.c-quest .qdesc {
+  font-family: var(--mono); font-size: 11px;
+  color: #777; line-height: 1.75;
+  padding-bottom: 18px; margin-bottom: 18px;
+  border-bottom: 1px solid var(--dark4);
+}
+.c-quest .qreward {
+  display: flex; align-items: baseline; gap: 10px; margin-bottom: 22px;
+}
+.c-quest .rl { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 2px; text-transform: uppercase; }
+.c-quest .rv { font-family: var(--title); font-size: 24px; color: var(--gold); letter-spacing: 2px; }
+.c-quest .btns { display: flex; gap: 10px; }
+.c-quest .btn { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; padding: 9px 22px; cursor: default; text-transform: uppercase; }
+.btn-y { background: var(--gold); color: #000; border: none; font-weight: 700; }
+.btn-n { background: transparent; color: var(--dim); border: 1px solid var(--dark5); }
+
+/* ═══════════════════════════════════
+   CARD 6 · ENTERING LOCATION
+═══════════════════════════════════ */
+.c-loc {
+  width: 480px;
+  background: rgba(5,5,5,0.92);
+  border-top: 1px solid var(--dark5);
+  border-bottom: 1px solid var(--dark4);
+  padding: 22px 28px;
+  animation: slideUp2 0.5s ease-out;
+  backdrop-filter: blur(12px);
+}
+.c-loc .eltag {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); letter-spacing: 4px;
+  margin-bottom: 7px; text-transform: uppercase;
+  display: flex; align-items: center; gap: 8px;
+}
+.pulse-dot {
+  display: inline-block; width: 5px; height: 5px;
+  background: var(--gold); border-radius: 50%;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.c-loc .lname {
+  font-family: var(--title); font-size: 44px;
+  color: #fff; letter-spacing: 4px; line-height: 1; margin-bottom: 7px;
+}
+.c-loc .lsub {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--dim); letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════
+   CARD 7 · PHONE CALL
+═══════════════════════════════════ */
+.c-phone {
+  width: 420px;
+  background: rgba(8,8,8,0.96);
+  border: 1px solid var(--dark4);
+  padding: 24px;
+  animation: slideUp2 0.4s ease-out;
+}
+.c-phone .ptag {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); letter-spacing: 3px;
+  text-align: center; margin-bottom: 18px;
+  text-transform: uppercase;
+}
+.c-phone .pname {
+  font-family: var(--title); font-size: 38px;
+  color: #fff; letter-spacing: 3px;
+  text-align: center; margin-bottom: 6px;
+}
+.c-phone .prole {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--dim); text-align: center; letter-spacing: 1.5px;
+  margin-bottom: 24px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--dark4);
+}
+.c-phone .pbtns {
+  display: flex; justify-content: center; gap: 52px;
+}
+.pcall-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: default; }
+.pcall-ico {
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 18px;
+}
+.ico-g { background: #1a3d1a; color: #5abf5a; }
+.ico-r { background: #3d1a1a; color: #bf5a5a; }
+.pcall-lbl { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; }
+
+/* ═══════════════════════════════════
+   CARD 8 · CHEAT CODE
+═══════════════════════════════════ */
+.c-cheat {
+  width: 440px;
+  background: var(--dark0);
+  border: 1px solid var(--dark4);
+  padding: 22px 26px;
+  position: relative; overflow: hidden;
+  animation: flashIn 0.4s ease-out;
+}
+.c-cheat::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(232,200,74,0.06) 0%, transparent 60%);
+}
+.c-cheat .ctag {
+  position: relative;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--gold); letter-spacing: 4px;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 10px;
+  text-transform: uppercase;
+}
+.c-cheat .code {
+  position: relative;
+  font-family: var(--title); font-size: 30px;
+  color: var(--gold); letter-spacing: 5px; margin-bottom: 8px;
+}
+.c-cheat .cdesc {
+  position: relative;
+  font-family: var(--mono); font-size: 12px;
+  color: #ccc; letter-spacing: 0.5px;
+}
+.c-cheat .creward {
+  position: relative;
+  margin-top: 16px;
+  font-family: var(--mono); font-size: 12px;
+  color: var(--gold); letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════
+   CARD 9 · WEEKLY STATS
+═══════════════════════════════════ */
+.c-stats {
+  width: 540px;
+  background: #060606;
+  border: 1px solid var(--dark4);
+  padding: 28px;
+}
+.c-stats .sh {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  margin-bottom: 22px; padding-bottom: 18px;
+  border-bottom: 1px solid var(--dark4);
+}
+.c-stats .stitle {
+  font-family: var(--title); font-size: 30px;
+  color: #fff; letter-spacing: 3px; line-height: 1;
+}
+.c-stats .ssub {
+  font-family: var(--mono); font-size: 8px;
+  color: var(--dim); letter-spacing: 2px; margin-top: 5px; text-transform: uppercase;
+}
+.c-stats .sweek {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--dim); text-align: right; letter-spacing: 1px; line-height: 1.7;
+}
+.sgrid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin-bottom: 22px;
+}
+.sbox {
+  background: #0a0a0a; border: 1px solid var(--dark4);
+  padding: 12px 14px;
+}
+.sbl { font-family: var(--mono); font-size: 8px; color: var(--dim); letter-spacing: 2px; margin-bottom: 6px; text-transform: uppercase; }
+.sbv { font-family: var(--title); font-size: 28px; color: var(--gold); letter-spacing: 2px; line-height: 1; }
+.sbc { font-family: var(--mono); font-size: 9px; color: var(--green-bright); margin-top: 4px; }
+.sbars { margin-bottom: 18px; }
+.sbar-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 9px;
+}
+.sbar-label { font-family: var(--mono); font-size: 9px; color: var(--dim); letter-spacing: 1px; width: 82px; flex-shrink: 0; text-transform: uppercase; }
+.sbar-track { flex: 1; height: 2px; background: var(--dark4); overflow: hidden; }
+.sbar-fill { height: 100%; background: var(--gold); }
+.sbar-pct { font-family: var(--mono); font-size: 9px; color: var(--dim); width: 26px; text-align: right; }
+.stars {
+  display: flex; justify-content: center; gap: 10px;
+  padding-top: 16px; border-top: 1px solid var(--dark4);
+}
+.star { font-size: 16px; color: var(--dark5); }
+.star.lit { color: var(--gold); }
+
+/* ═══════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════ */
+@keyframes loaderProg {
+  0%   { width: 0; }
+  60%  { width: 55%; }
+  85%  { width: 82%; }
+  100% { width: 87%; }
+}
+@keyframes lFill {
+  0%   { width: 0; }
+  100% { width: 68%; }
+}
+@keyframes popIn {
+  0%   { transform: scale(0.4); opacity: 0; }
+  65%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(18px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideUp2 {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideR {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeL {
+  from { transform: translateX(-16px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeR {
+  from { transform: translateX(16px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes expandLine {
+  from { width: 0; }
+  to   { width: 64px; }
+}
+@keyframes scanAnim {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); }
+}
+@keyframes flashIn {
+  0%   { opacity: 0; }
+  25%  { opacity: 1; }
+  45%  { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.2; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: var(--dark5); }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ LOADER ══════════════ -->
+<div id="loader">
+  <div class="loader-sky"></div>
+
+  <!-- Hyderabad skyline SVG -->
+  <svg class="loader-skyline" viewBox="0 0 1200 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="bldg" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#0d0d1a"/>
+        <stop offset="100%" stop-color="#060608"/>
+      </linearGradient>
+    </defs>
+    <!-- Buildings left cluster -->
+    <rect x="0"   y="110" width="60"  height="70" fill="url(#bldg)"/>
+    <rect x="65"  y="70"  width="45"  height="110" fill="url(#bldg)"/>
+    <rect x="115" y="90"  width="35"  height="90" fill="url(#bldg)"/>
+    <rect x="155" y="50"  width="55"  height="130" fill="url(#bldg)"/>
+    <!-- Charminar silhouette center-left -->
+    <rect x="215" y="80"  width="14"  height="100" fill="url(#bldg)"/>
+    <rect x="232" y="30"  width="20"  height="150" fill="url(#bldg)"/>
+    <polygon points="242,30 252,5 262,30" fill="#0d0d1a"/>
+    <rect x="255" y="80"  width="14"  height="100" fill="url(#bldg)"/>
+    <!-- Mid buildings -->
+    <rect x="280" y="95"  width="50"  height="85" fill="url(#bldg)"/>
+    <rect x="335" y="60"  width="40"  height="120" fill="url(#bldg)"/>
+    <rect x="380" y="40"  width="65"  height="140" fill="url(#bldg)"/>
+    <rect x="450" y="75"  width="30"  height="105" fill="url(#bldg)"/>
+    <!-- Tall center tower -->
+    <rect x="490" y="20"  width="50"  height="160" fill="url(#bldg)"/>
+    <rect x="510" y="10"  width="10"  height="12" fill="#131318"/>
+    <!-- Right cluster -->
+    <rect x="550" y="55"  width="45"  height="125" fill="url(#bldg)"/>
+    <rect x="600" y="80"  width="60"  height="100" fill="url(#bldg)"/>
+    <rect x="665" y="45"  width="35"  height="135" fill="url(#bldg)"/>
+    <rect x="705" y="65"  width="50"  height="115" fill="url(#bldg)"/>
+    <rect x="760" y="30"  width="70"  height="150" fill="url(#bldg)"/>
+    <rect x="835" y="85"  width="40"  height="95" fill="url(#bldg)"/>
+    <rect x="880" y="60"  width="55"  height="120" fill="url(#bldg)"/>
+    <rect x="940" y="90"  width="45"  height="90" fill="url(#bldg)"/>
+    <rect x="990" y="70"  width="35"  height="110" fill="url(#bldg)"/>
+    <rect x="1030" y="50" width="60"  height="130" fill="url(#bldg)"/>
+    <rect x="1095" y="95" width="50"  height="85" fill="url(#bldg)"/>
+    <rect x="1150" y="75" width="50"  height="105" fill="url(#bldg)"/>
+    <!-- Ground fade -->
+    <rect x="0" y="155" width="1200" height="25"
+      fill="url(#gfade)"/>
+    <defs>
+      <linearGradient id="gfade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="transparent"/>
+        <stop offset="100%" stop-color="#000"/>
+      </linearGradient>
+    </defs>
+    <!-- Scattered window lights -->
+    <rect x="90"  y="80"  width="4" height="3" fill="#e8c84a" opacity="0.3"/>
+    <rect x="170" y="65"  width="4" height="3" fill="#e8c84a" opacity="0.2"/>
+    <rect x="240" y="45"  width="4" height="3" fill="#e8c84a" opacity="0.4"/>
+    <rect x="395" y="55"  width="4" height="3" fill="#e8c84a" opacity="0.25"/>
+    <rect x="500" y="35"  width="4" height="3" fill="#e8c84a" opacity="0.5"/>
+    <rect x="680" y="58"  width="4" height="3" fill="#e8c84a" opacity="0.3"/>
+    <rect x="790" y="42"  width="4" height="3" fill="#e8c84a" opacity="0.35"/>
+    <rect x="900" y="72"  width="4" height="3" fill="#e8c84a" opacity="0.2"/>
+    <rect x="1050" y="62" width="4" height="3" fill="#e8c84a" opacity="0.3"/>
+  </svg>
+
+  <div class="loader-ground"></div>
+  <div class="loader-glow"></div>
+
+  <div class="loader-content">
+    <div class="loader-title">SHADOW OWNER · CONTENT KIT</div>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar-labels">
+        <span>Initializing Visual Arsenal</span>
+        <span id="ldrPct">0%</span>
+      </div>
+      <div class="loader-bar">
+        <div class="loader-fill"></div>
+      </div>
+    </div>
+    <div class="loader-tip">
+      <em>TIP:</em> Your story is your strongest distribution channel.<br>
+      Every mission is content. Every failure is a reel.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ MAIN APP ══════════════ -->
+<div id="app">
+
+  <div class="kit-header">
+    <h1>SHADOW OWNER CONTENT KIT</h1>
+    <p>GTA-Inspired Visual Language · v1.0 · Hyderabad Arc · No Rockstar IP</p>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <div class="tab on"  data-c="passed">  ✓ Mission Passed</div>
+    <div class="tab"     data-c="failed">  ✗ Mission Failed</div>
+    <div class="tab"     data-c="chapter"> ◈ Chapter Card</div>
+    <div class="tab"     data-c="loading"> ▓ Loading Screen</div>
+    <div class="tab"     data-c="quest">   ⬡ Side Quest</div>
+    <div class="tab"     data-c="loc">     ◉ Enter Location</div>
+    <div class="tab"     data-c="phone">   ☎ Phone Call</div>
+    <div class="tab"     data-c="cheat">   ⚡ Cheat Code</div>
+    <div class="tab"     data-c="stats">   ☰ Weekly Stats</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <button class="replay-btn" onclick="replay()">↺ REPLAY</button>
+
+    <!-- 1. MISSION PASSED -->
+    <div class="cw on" id="cw-passed">
+      <div class="c-passed">
+        <div class="scan"></div>
+        <div class="glow"></div>
+        <div class="check">✓</div>
+        <div class="label"><span>MISSION</span><br>PASSED</div>
+        <div class="sub">SHADOW OWNER · 20 PILOT USERS ONBOARDED</div>
+        <div class="resp">RESPECT +250</div>
+        <div class="row">
+          <div class="st"><div class="sv">14:32</div><div class="sl">TIME</div></div>
+          <div class="st"><div class="sv">₹4,200</div><div class="sl">EARNED</div></div>
+          <div class="st"><div class="sv">★★★★☆</div><div class="sl">RATING</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MISSION FAILED -->
+    <div class="cw" id="cw-failed">
+      <div class="c-failed">
+        <div class="scan"></div>
+        <div class="glow"></div>
+        <div class="cross">✕</div>
+        <div class="label"><span>MISSION</span><br>FAILED</div>
+        <div class="sub">UPWORK PROPOSAL #23 · CLIENT WENT DARK</div>
+        <div class="cause">YOU WERE WASTED BY: BAD TIMING</div>
+        <div class="retry">→ RETRY: SEND 3 MORE TODAY</div>
+      </div>
+    </div>
+
+    <!-- 3. CHAPTER CARD -->
+    <div class="cw" id="cw-chapter">
+      <div class="c-chapter">
+        <div class="bg"></div>
+        <div class="grain"></div>
+        <div class="num">CHAPTER 01</div>
+        <div class="line"></div>
+        <div class="ctitle">ENTERING<br>HYDERABAD</div>
+        <div class="csub">MAIN QUEST: SHADOW OWNER · SIDE QUESTS: UNLIMITED</div>
+        <div class="badge">BANJARA HILLS, TG</div>
+      </div>
+    </div>
+
+    <!-- 4. LOADING SCREEN -->
+    <div class="cw" id="cw-loading">
+      <div class="c-loading">
+        <div class="sky"></div>
+        <div class="big-text">HYDERABAD</div>
+        <svg class="skyline-svg" viewBox="0 0 560 80" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#0f0f1e"/>
+              <stop offset="100%" stop-color="#050508"/>
+            </linearGradient>
+          </defs>
+          <rect x="0"   y="40" width="30"  height="40" fill="url(#sg)"/>
+          <rect x="35"  y="20" width="25"  height="60" fill="url(#sg)"/>
+          <rect x="65"  y="30" width="20"  height="50" fill="url(#sg)"/>
+          <rect x="90"  y="10" width="35"  height="70" fill="url(#sg)"/>
+          <rect x="130" y="35" width="22"  height="45" fill="url(#sg)"/>
+          <rect x="157" y="5"  width="28"  height="75" fill="url(#sg)"/>
+          <polygon points="171,5 185,0 199,5" fill="#0f0f1e"/>
+          <rect x="190" y="25" width="40"  height="55" fill="url(#sg)"/>
+          <rect x="235" y="15" width="55"  height="65" fill="url(#sg)"/>
+          <rect x="295" y="30" width="30"  height="50" fill="url(#sg)"/>
+          <rect x="330" y="0"  width="40"  height="80" fill="url(#sg)"/>
+          <rect x="375" y="20" width="28"  height="60" fill="url(#sg)"/>
+          <rect x="408" y="35" width="45"  height="45" fill="url(#sg)"/>
+          <rect x="458" y="12" width="35"  height="68" fill="url(#sg)"/>
+          <rect x="498" y="25" width="62"  height="55" fill="url(#sg)"/>
+          <rect x="0" y="65" width="560" height="15" fill="url(#gf2)"/>
+          <defs>
+            <linearGradient id="gf2" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="transparent"/>
+              <stop offset="100%" stop-color="#000"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="bottom">
+          <div class="bar-head">
+            <span>Loading</span>
+            <span id="lpct">0%</span>
+          </div>
+          <div class="bar"><div class="fill"></div></div>
+          <div class="tip">
+            <em>TIP:</em> In Hyderabad, the best meetings happen over chai.
+            Every NPC you talk to could be your next client.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. SIDE QUEST -->
+    <div class="cw" id="cw-quest">
+      <div class="c-quest">
+        <div class="qtag">New Side Quest Available</div>
+        <div class="qtitle">THE UPWORK CLIENT</div>
+        <div class="qdesc">
+          A US-based startup needs a WhatsApp automation system.
+          They've shortlisted your profile. Deadline: Friday.
+          First ₹50K Upwork win within reach.
+        </div>
+        <div class="qreward">
+          <div class="rl">Reward:</div>
+          <div class="rv">₹45,000 + Testimonial</div>
+        </div>
+        <div class="btns">
+          <div class="btn btn-y">Accept</div>
+          <div class="btn btn-n">Decline</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. ENTERING LOCATION -->
+    <div class="cw" id="cw-loc">
+      <div style="background:#0a0a0a; padding:60px 32px; width:100%; text-align:center;">
+        <div style="font-family:'Share Tech Mono',monospace; font-size:9px; color:#333; letter-spacing:2px; margin-bottom:40px; text-transform:uppercase;">
+          Bottom overlay · use for travel reels & city transitions
+        </div>
+        <div class="c-loc" style="display:inline-block; text-align:left;">
+          <div class="eltag">
+            <span class="pulse-dot"></span>
+            Now Entering
+          </div>
+          <div class="lname">BANJARA HILLS</div>
+          <div class="lsub">Hyderabad, Telangana · Hustle Zone Active</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. PHONE CALL -->
+    <div class="cw" id="cw-phone">
+      <div style="background:#0a0a0a; padding:60px 32px; width:100%; text-align:center;">
+        <div style="font-family:'Share Tech Mono',monospace; font-size:9px; color:#333; letter-spacing:2px; margin-bottom:40px; text-transform:uppercase;">
+          Bottom notification · use for call reveals in vlogs
+        </div>
+        <div class="c-phone" style="display:inline-block; text-align:left;">
+          <div class="ptag">☎ Incoming Call</div>
+          <div class="pname">UPWORK CLIENT</div>
+          <div class="prole">Project Value: ₹45,000 · 2 Missed Calls Before This</div>
+          <div class="pbtns">
+            <div class="pcall-btn">
+              <div class="pcall-ico ico-g">✓</div>
+              <div class="pcall-lbl">Accept</div>
+            </div>
+            <div class="pcall-btn">
+              <div class="pcall-ico ico-r">✕</div>
+              <div class="pcall-lbl">Decline</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. CHEAT CODE -->
+    <div class="cw" id="cw-cheat">
+      <div class="c-cheat">
+        <div class="ctag">⚡ Cheat Code Activated</div>
+        <div class="code">HUSTLEHARD</div>
+        <div class="cdesc">First Upwork payment received. The system actually works.</div>
+        <div class="creward">+₹50,000 Added To Wallet</div>
+      </div>
+    </div>
+
+    <!-- 9. WEEKLY STATS -->
+    <div class="cw" id="cw-stats">
+      <div class="c-stats">
+        <div class="sh">
+          <div>
+            <div class="stitle">WEEKLY DEBRIEF</div>
+            <div class="ssub">Hyderabad Arc · Week 03</div>
+          </div>
+          <div class="sweek">May 2026<br>Main Quest Active</div>
+        </div>
+        <div class="sgrid">
+          <div class="sbox">
+            <div class="sbl">Missions Done</div>
+            <div class="sbv">4 / 6</div>
+            <div class="sbc">↑ +2 from last week</div>
+          </div>
+          <div class="sbox">
+            <div class="sbl">Cash Earned</div>
+            <div class="sbv">₹82K</div>
+            <div class="sbc">↑ First green week</div>
+          </div>
+          <div class="sbox">
+            <div class="sbl">Proposals Sent</div>
+            <div class="sbv">12</div>
+            <div class="sbc">↑ 3 replies</div>
+          </div>
+          <div class="sbox">
+            <div class="sbl">Shadow Users</div>
+            <div class="sbv">23</div>
+            <div class="sbc">↑ +8 new pilots</div>
+          </div>
+        </div>
+        <div class="sbars">
+          <div class="sbar-row">
+            <div class="sbar-label">Coding</div>
+            <div class="sbar-track"><div class="sbar-fill" style="width:78%"></div></div>
+            <div class="sbar-pct">78%</div>
+          </div>
+          <div class="sbar-row">
+            <div class="sbar-label">Hustle</div>
+            <div class="sbar-track"><div class="sbar-fill" style="width:62%"></div></div>
+            <div class="sbar-pct">62%</div>
+          </div>
+          <div class="sbar-row">
+            <div class="sbar-label">Network</div>
+            <div class="sbar-track"><div class="sbar-fill" style="width:45%"></div></div>
+            <div class="sbar-pct">45%</div>
+          </div>
+          <div class="sbar-row">
+            <div class="sbar-label">Content</div>
+            <div class="sbar-track"><div class="sbar-fill" style="width:33%"></div></div>
+            <div class="sbar-pct">33%</div>
+          </div>
+        </div>
+        <div class="stars">
+          <div class="star lit">★</div>
+          <div class="star lit">★</div>
+          <div class="star lit">★</div>
+          <div class="star">★</div>
+          <div class="star">★</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /stage -->
+
+  <div class="stage-note">
+    Click any card to switch · <em>↺ Replay</em> to retrigger animation ·
+    Screenshot each card for overlay use · <em>Zero Rockstar IP</em>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+// ── Loader countdown ──────────────────────
+const ldrEl  = document.getElementById('loader');
+const appEl  = document.getElementById('app');
+const pctEl  = document.getElementById('ldrPct');
+const lpctEl = document.getElementById('lpct');
+
+let n = 0;
+const tick = setInterval(() => {
+  n += Math.floor(Math.random() * 9) + 3;
+  if (n >= 87) { n = 87; clearInterval(tick); }
+  if (pctEl) pctEl.textContent = n + '%';
+}, 110);
+
+setTimeout(() => {
+  ldrEl.style.opacity = '0';
+  ldrEl.style.pointerEvents = 'none';
+  setTimeout(() => {
+    ldrEl.style.display = 'none';
+    appEl.classList.add('show');
+  }, 600);
+}, 2800);
+
+// ── Loading bar counter for card 4 ────────
+let lp = 0;
+let lpTick;
+function startLoadingBar() {
+  lp = 0;
+  clearInterval(lpTick);
+  lpTick = setInterval(() => {
+    lp += Math.floor(Math.random() * 7) + 2;
+    if (lp >= 68) { lp = 68; clearInterval(lpTick); }
+    const el = document.getElementById('lpct');
+    if (el) el.textContent = lp + '%';
+  }, 120);
+}
+
+// ── Tab switching ──────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const id = tab.dataset.c;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.cw').forEach(c => c.classList.remove('on'));
+    tab.classList.add('on');
+    document.getElementById('cw-' + id).classList.add('on');
+    triggerAnim(id);
+  });
+});
+
+// ── Replay / animation trigger ─────────────
+function replay() {
+  const active = document.querySelector('.cw.on');
+  if (!active) return;
+  const id = active.id.replace('cw-', '');
+  const html = active.innerHTML;
+  active.innerHTML = '';
+  void active.offsetWidth;
+  active.innerHTML = html;
+  if (id === 'loading') startLoadingBar();
+}
+
+function triggerAnim(id) {
+  if (id === 'loading') setTimeout(() => startLoadingBar(), 50);
+}
+</script>
+</body>
+</html>
