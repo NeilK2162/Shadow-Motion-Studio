@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
+import { webpackOverride } from '../remotion/webpack-override';
 import { createDefaultProject, projectToInputProps } from '../remotion/inputProps';
 import type { Project } from '../types';
 import { RESOLUTION_MAP } from '../types';
@@ -15,10 +16,12 @@ let bundleLocation: string | null = null;
 
 async function getBundle(): Promise<string> {
   if (bundleLocation) return bundleLocation;
-  const entry = path.join(ROOT, 'src/remotion/index.ts');
+  const entry = path.join(ROOT, 'src', 'remotion', 'index.ts');
   bundleLocation = await bundle({
     entryPoint: entry,
-    webpackOverride: (config) => config,
+    rootDir: ROOT,
+    webpackOverride,
+    enableCaching: false,
   });
   return bundleLocation;
 }

@@ -4,7 +4,9 @@ import { TemplateComposition } from '@/remotion/TemplateComposition';
 import { projectToInputProps } from '@/remotion/inputProps';
 import { useEditorStore } from '@/store/editorStore';
 import { RESOLUTION_MAP } from '@/types';
-import { getTemplateCardSize } from '@/lib/previewScale';
+
+const PREVIEW_MAX_W = 880;
+const PREVIEW_MAX_H = 400;
 
 export function Preview() {
   const project = useEditorStore((s) => s.project);
@@ -16,9 +18,10 @@ export function Preview() {
   const setCustomBackground = useEditorStore((s) => s.setCustomBackground);
 
   const { width, height } = RESOLUTION_MAP[project.export.resolution];
-  const cardSize = getTemplateCardSize(project.template, project.fields);
-  // Zoom preview so the card fills ~90% of the preview pane (not the full composition canvas).
-  const scale = Math.min((760 * 0.9) / cardSize.width, (480 * 0.9) / cardSize.height, 2.5);
+  const layoutScale = Math.min(PREVIEW_MAX_W / width, PREVIEW_MAX_H / height, 1);
+  const displayW = Math.round(width * layoutScale);
+  const displayH = Math.round(height * layoutScale);
+
   const inputProps = {
     ...projectToInputProps(project),
     backgroundMode: previewBackground,
@@ -26,11 +29,18 @@ export function Preview() {
     resolution: project.export.resolution,
   };
 
+  const stageBackground =
+    previewBackground === 'transparent'
+      ? 'repeating-conic-gradient(#111 0% 25%, #1a1a1a 0% 50%) 50% / 20px 20px'
+      : previewBackground === 'custom'
+        ? customBackground
+        : '#000';
+
   return (
-    <div className="flex flex-1 flex-col bg-dark0 p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
+    <section className="shrink-0 border-b border-dark4 bg-dark0 p-4">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="font-mono text-[9px] uppercase tracking-[2px] text-dim">Preview</div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={previewBackground}
             onChange={(e) => setPreviewBackground(e.target.value as 'dark' | 'transparent' | 'custom')}
@@ -57,35 +67,40 @@ export function Preview() {
           </button>
         </div>
       </div>
-      <div
-        className="relative mx-auto flex flex-1 items-center justify-center overflow-hidden border border-dark3"
-        style={{
-          background:
-            previewBackground === 'transparent'
-              ? 'repeating-conic-gradient(#111 0% 25%, #1a1a1a 0% 50%) 50% / 20px 20px'
-              : previewBackground === 'custom'
-                ? customBackground
-                : '#000',
-          minHeight: 420,
-          width: '100%',
-        }}
-      >
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
-          <Player
-            key={playerKey}
-            component={TemplateComposition}
-            inputProps={inputProps}
-            durationInFrames={project.animation.durationInFrames}
-            fps={project.export.fps}
-            compositionWidth={width}
-            compositionHeight={height}
-            style={{ width, height }}
-            controls={false}
-            loop
-            autoPlay
-          />
+      <div className="flex justify-center">
+        <div
+          className="relative overflow-hidden border border-dark3"
+          style={{
+            width: displayW,
+            height: displayH,
+            maxWidth: '100%',
+            background: stageBackground,
+          }}
+        >
+          <div
+            style={{
+              width,
+              height,
+              transform: `scale(${layoutScale})`,
+              transformOrigin: 'top left',
+            }}
+          >
+            <Player
+              key={playerKey}
+              component={TemplateComposition}
+              inputProps={inputProps}
+              durationInFrames={project.animation.durationInFrames}
+              fps={project.export.fps}
+              compositionWidth={width}
+              compositionHeight={height}
+              style={{ width, height }}
+              controls={false}
+              loop
+              autoPlay
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

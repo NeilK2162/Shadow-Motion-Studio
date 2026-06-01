@@ -210,7 +210,7 @@ export function Properties() {
   };
 
   return (
-    <div className="border-t border-dark4 bg-dark2 p-4">
+    <div className="bg-dark2 p-4 pb-10">
       <div className="mb-3 font-mono text-[9px] uppercase tracking-[2px] text-dim">Property Editor</div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-4">
         <div className="space-y-3">
