@@ -13,6 +13,7 @@ import {
   getProjectsDir,
   getExportsDir,
   getSeriesDir,
+  getDirectorPacksDir,
 } from '../lib/runtimeConfig';
 import {
   generatePack,
@@ -20,6 +21,7 @@ import {
   renderDirectorPack,
   resetSessionUsage,
 } from '../director/orchestrator';
+import { persistDirectorPack, listSavedPacks, loadSavedPack } from '../director/packs';
 import { defaultSeries, listSeries, writeSeries } from '../director/memory';
 import { readDirectorSettings, sanitizeSettings, writeDirectorSettings } from '../director/settings';
 import { readVoices, writeVoices } from '../director/voice';
@@ -50,6 +52,7 @@ async function ensureDirs(): Promise<void> {
   await fs.mkdir(getDataFilesDir(), { recursive: true });
   await fs.mkdir(getAssetsDir(), { recursive: true });
   await fs.mkdir(getSeriesDir(), { recursive: true });
+  await fs.mkdir(getDirectorPacksDir(), { recursive: true });
 }
 
 export async function startServer(options: StartServerOptions = {}): Promise<RunningServer> {
@@ -88,8 +91,9 @@ export async function startServer(options: StartServerOptions = {}): Promise<Run
     try {
       const body = req.body as GenerateRequest;
       const result = await generatePack(body);
+      const saved = await persistDirectorPack(result.pack);
       const sessionUsage = getSessionUsage();
-      res.json({ ok: true, ...result, sessionUsage });
+      res.json({ ok: true, ...result, sessionUsage, saved });
     } catch (error) {
       res.status(500).json({ ok: false, error: String(error) });
     }
@@ -167,6 +171,28 @@ export async function startServer(options: StartServerOptions = {}): Promise<Run
       const voices = req.body as import('../director/types').VoiceProfile[];
       await writeVoices(voices);
       res.json({ ok: true });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.get('/api/director/packs', async (_req, res) => {
+    try {
+      res.json(await listSavedPacks());
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.get('/api/director/packs/load', async (req, res) => {
+    try {
+      const id = String(req.query.id ?? '');
+      const pack = await loadSavedPack(id);
+      if (!pack) {
+        res.status(404).json({ ok: false, error: 'Pack not found' });
+        return;
+      }
+      res.json({ ok: true, pack });
     } catch (error) {
       res.status(500).json({ ok: false, error: String(error) });
     }

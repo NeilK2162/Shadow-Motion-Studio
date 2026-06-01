@@ -78,6 +78,10 @@ export function getSeriesDir(): string {
   return path.join(getDataFilesDir(), 'series');
 }
 
+export function getDirectorPacksDir(): string {
+  return path.join(getDataFilesDir(), 'director-packs');
+}
+
 export function getServeUrl(): string | null {
   return config.serveUrl;
 }

@@ -10,4 +10,5 @@ exports
 data/director.json
 data/voices.json
 data/series/
+data/director-packs/
 *.key

@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { mergeUsage } from '@/director/pricing';
-import type { DirectorPack, DirectorSettings, SeriesMemory } from '@/director/types';
+import type { DirectorPack, DirectorSettings, SavedPackMeta, SeriesMemory } from '@/director/types';
+import { parseApiJson } from '@/lib/apiFetch';
 import { useDirectorStore } from '@/store/directorStore';
 import { useEditorStore } from '@/store/editorStore';
 import { AssetGrid } from './AssetGrid';
@@ -37,25 +38,28 @@ export function DirectorPanel() {
 
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [seriesModalOpen, setSeriesModalOpen] = useState(false);
+  const [savedPacks, setSavedPacks] = useState<SavedPackMeta[]>([]);
 
   const loadMeta = useCallback(async () => {
     try {
-      const [settingsRes, seriesRes, voicesRes, usageRes] = await Promise.all([
+      const [settingsRes, seriesRes, voicesRes, usageRes, packsRes] = await Promise.all([
         fetch('/api/director/settings'),
         fetch('/api/director/series'),
         fetch('/api/director/voices'),
         fetch('/api/director/usage'),
+        fetch('/api/director/packs'),
       ]);
       if (settingsRes.ok) {
-        const s = (await settingsRes.json()) as Partial<DirectorSettings> & { hasKey?: boolean };
+        const s = await parseApiJson<Partial<DirectorSettings> & { hasKey?: boolean }>(settingsRes);
         setSettings(s);
         setDryRun(s.dryRunDefault ?? true);
       }
-      if (seriesRes.ok) setSeriesList(await seriesRes.json());
-      if (voicesRes.ok) setVoices(await voicesRes.json());
-      if (usageRes.ok) setSessionUsage(await usageRes.json());
+      if (seriesRes.ok) setSeriesList(await parseApiJson(seriesRes));
+      if (voicesRes.ok) setVoices(await parseApiJson(voicesRes));
+      if (usageRes.ok) setSessionUsage(await parseApiJson(usageRes));
+      if (packsRes.ok) setSavedPacks(await parseApiJson(packsRes));
     } catch {
-      /* offline — local mode still works when server up */
+      /* server not ready yet */
     }
   }, [setSettings, setDryRun, setSeriesList, setVoices, setSessionUsage]);
 
@@ -70,8 +74,23 @@ export function DirectorPanel() {
       body: JSON.stringify(patch),
     });
     if (res.ok) {
-      const data = (await res.json()) as { settings: Partial<DirectorSettings> & { hasKey?: boolean } };
+      const data = await parseApiJson<{ settings: Partial<DirectorSettings> & { hasKey?: boolean } }>(res);
       setSettings(data.settings);
+    }
+  };
+
+  const loadSavedPack = async (packId: string) => {
+    try {
+      const res = await fetch(`/api/director/packs/load?id=${encodeURIComponent(packId)}`);
+      const data = await parseApiJson<{ ok: boolean; pack?: DirectorPack; error?: string }>(res);
+      if (!res.ok || !data.pack) {
+        setStatus('error', data.error ?? 'Could not load pack');
+        return;
+      }
+      setCurrentPack(data.pack);
+      setStatus('review', `Loaded saved pack (ep ${data.pack.episode})`);
+    } catch (e) {
+      setStatus('error', String(e));
     }
   };
 
@@ -87,15 +106,26 @@ export function DirectorPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ concept, formatTarget, seriesId, dryRun }),
       });
-      const data = await res.json();
+      const data = await parseApiJson<{
+        ok: boolean;
+        pack?: DirectorPack;
+        budgetExceeded?: boolean;
+        sessionUsage?: typeof sessionUsage;
+        saved?: { projectNames: string[] };
+        error?: string;
+      }>(res);
       if (!res.ok) {
         setStatus('error', data.error ?? 'Generate failed');
         return;
       }
+      const savedMsg =
+        data.saved?.projectNames?.length ?
+          ` Saved to projects/: ${data.saved.projectNames.join(', ')}`
+        : '';
       if (data.budgetExceeded) {
-        setStatus('budget_paused', 'Session token budget reached. Continue anyway or reset usage.');
+        setStatus('budget_paused', `Session token budget reached.${savedMsg}`);
       } else {
-        setStatus('review', 'Review your pack before rendering');
+        setStatus('review', `Review your pack before rendering.${savedMsg}`);
       }
       setCurrentPack(data.pack as DirectorPack);
       if (data.sessionUsage) setSessionUsage(data.sessionUsage);
@@ -110,7 +140,7 @@ export function DirectorPanel() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pack: data.pack }),
         });
-        const renderData = await renderRes.json();
+        const renderData = await parseApiJson<{ ok: boolean; folder?: string; error?: string }>(renderRes);
         if (!renderRes.ok) {
           setStatus('error', renderData.error ?? 'Render failed');
           return;
@@ -132,7 +162,7 @@ export function DirectorPanel() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pack: currentPack }),
       });
-      const data = await res.json();
+      const data = await parseApiJson<{ ok: boolean; folder?: string; error?: string }>(res);
       if (!res.ok) {
         setStatus('error', data.error ?? 'Render failed');
         return;
@@ -180,6 +210,27 @@ export function DirectorPanel() {
             </span>
             <span>· Ep {activeSeries?.episode ?? 1}</span>
           </div>
+
+          {savedPacks.length > 0 && (
+            <label className="flex flex-col gap-1 font-mono text-[9px] uppercase text-dim">
+              Load saved pack
+              <select
+                defaultValue=""
+                onChange={(e) => {
+                  if (e.target.value) void loadSavedPack(e.target.value);
+                  e.target.value = '';
+                }}
+                className="border border-dark5 bg-dark0 px-2 py-1 font-mono text-[10px] normal-case text-text"
+              >
+                <option value="">Select a previous pack…</option>
+                {savedPacks.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    Ep {p.episode} · {p.concept.slice(0, 40)}…
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <textarea
             value={concept}

@@ -97,6 +97,15 @@ export interface GenerateResult {
   budgetExceeded?: boolean;
 }
 
+export interface SavedPackMeta {
+  id: string;
+  episode: number;
+  concept: string;
+  createdAt: string;
+  assetCount: number;
+  projectNames: string[];
+}
+
 export const DEFAULT_DIRECTOR_SETTINGS: DirectorSettings = {
   provider: 'local',
   qualityMode: false,
