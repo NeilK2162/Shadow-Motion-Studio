@@ -13,3 +13,16 @@ data/series/
 data/director-packs/
 data/templates/custom/
 *.key
+projects
+projects/
+exports/
+data/
+.env
+.DS_Store
+*.local
+*.key
+*.log
+*.log.*
+*.log.*.*
+*.log.*.*.*
+*.log.*.*.*.*
