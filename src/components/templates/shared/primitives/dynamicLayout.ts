@@ -59,11 +59,13 @@ export function getDynamicBackground(
   switch (def.background) {
     case 'transparent':
       return 'transparent';
-    case 'gradient':
-      return 'linear-gradient(135deg, #050f05 0%, #030a03 100%)';
+    case 'gradient': {
+      const [c0, c1] = def.backgroundColors ?? ['#050f05', '#030a03'];
+      return `linear-gradient(135deg, ${c0} 0%, ${c1} 100%)`;
+    }
     case 'solid':
     default:
-      return 'linear-gradient(135deg, #050f05 0%, #030a03 100%)';
+      return '#050f05';
   }
 }
 

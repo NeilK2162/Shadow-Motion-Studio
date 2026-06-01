@@ -16,6 +16,7 @@ Design rules:
 - defaultPlacement: center for cards, bottom-left for HUD overlays
 - recommendedFormats: pick 2–3 from youtube-landscape, shorts-vertical, feed-square
 - background: solid or gradient for cards, transparent optional for HUD
+- backgroundColors: optional ["#rrggbb","#rrggbb"] start+end hex pair for gradient backgrounds — set context-aware palette (sunset: ["#ff6b35","#4a0e8f"], beach: ["#0077b6","#00b4d8"], neon: ["#0d0d2b","#1a0033"])
 - id: lowercase slug with hyphens, unique, descriptive (e.g. combo-streak-a1b2c3d4)
 - group: stingers | hud | cards | engagement
 

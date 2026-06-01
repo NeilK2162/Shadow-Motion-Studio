@@ -14,6 +14,7 @@ export const TEMPLATE_TOP_LEVEL_KEYS = new Set([
   'defaultPlacement',
   'recommendedFormats',
   'background',
+  'backgroundColors',
   'fields',
   'elements',
 ]);

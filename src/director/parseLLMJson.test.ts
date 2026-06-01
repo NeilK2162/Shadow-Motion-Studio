@@ -34,6 +34,24 @@ describe('parseLLMJson', () => {
     assert.ok(data.beats.length >= 1);
     assert.equal(data.beats[0].template, 'chapter-card');
   });
+
+  it('handles prefill + model re-wrapping in fences (embedded fence)', () => {
+    // Simulates: args.prefill prepended, model still outputs full fenced JSON.
+    const raw =
+      '{"beats":[\`\`\`json\n{ "beats": [ { "template": "chapter-card", "intent": "Miami vibes", "mode": "reuse" }, { "template": "loading-screen", "intent": "Pack 1: Gangsters at sunset", "mode": "reuse" } ] }\n\`\`\`';
+    const data = parseLLMJson<{ beats: Array<{ template: string }> }>(raw);
+    assert.ok(data.beats.length >= 1);
+    assert.ok(['chapter-card', 'loading-screen'].includes(data.beats[0].template));
+  });
+
+  it('handles prefill + truncated fenced response', () => {
+    // Prefill was prepended, model output a fenced+truncated plan.
+    const raw =
+      '{"beats":[\`\`\`json\n{ "beats": [ { "template": "chapter-card", "intent": "Miami vibes", "mode": "reuse" }, { "template": "loading-screen", "intent": "Pack 1: Gangsters at sunse';
+    const data = parseLLMJson<{ beats: Array<{ template: string }> }>(raw);
+    assert.ok(data.beats.length >= 1);
+    assert.equal(data.beats[0].template, 'chapter-card');
+  });
 });
 
 describe('salvageBeatsPlan', () => {

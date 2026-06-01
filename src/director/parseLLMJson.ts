@@ -1,5 +1,6 @@
 /** Best-effort parse of JSON returned by an LLM (fences, trailing commas, truncated salvage).
- * Handles Anthropic assistant prefill (response already starts with `{` or `[`). */
+ * Handles Anthropic assistant prefill (response already starts with `{` or `[`),
+ * embedded fences (prefill + model re-outputs ```json wrapper), and truncation. */
 export function parseLLMJson<T>(text: string): T {
   const trimmed = text.trim();
   const candidates = buildCandidates(trimmed);
@@ -15,30 +16,79 @@ export function parseLLMJson<T>(text: string): T {
     }
   }
 
+  // Last resort: salvage individual beat objects via regex.
   const salvaged = salvageBeatsPlan(trimmed);
-  if (salvaged) {
-    return salvaged as T;
-  }
+  if (salvaged) return salvaged as T;
 
   throw new SyntaxError(`Could not parse LLM JSON (preview: ${trimmed.slice(0, 240).replace(/\s+/g, ' ')})`);
 }
 
+/** Build an ordered list of candidate strings to try JSON.parse against. */
 function buildCandidates(text: string): string[] {
+  const candidates: string[] = [];
+
+  const add = (...strs: (string | null | undefined)[]) => {
+    for (const s of strs) if (s) candidates.push(s);
+  };
+
+  // 1. Raw text as-is.
+  add(text);
+
+  // 2. Strip fences at start/end only.
   const stripped = stripCodeFences(text);
-  const block = extractJsonBlock(stripped) ?? extractJsonBlock(text);
-  const out = [text, stripped];
-  if (block) {
-    out.push(block, fixTrailingCommas(block), closeTruncatedJson(block));
+  add(stripped);
+
+  // 3. Strip ALL ``` markers anywhere in the text (handles prefill + re-wrapped fence).
+  const clean = removeAllFenceMarkers(text);
+  add(clean);
+
+  // 4. Text extracted after the last fence opening (model re-output entire JSON after prefill).
+  const afterFence = textAfterLastFence(text);
+  add(afterFence);
+
+  // 5. Extract the first balanced JSON block from each base variant.
+  for (const base of [stripped, clean, afterFence ?? '']) {
+    if (!base) continue;
+    const block = extractJsonBlock(base);
+    add(block, block && fixTrailingCommas(block), block && closeTruncatedJson(block));
   }
-  out.push(fixTrailingCommas(stripped), closeTruncatedJson(stripped));
-  return out;
+
+  // 6. Attempt truncation repair on the most promising bases.
+  for (const base of [text, stripped, clean, afterFence ?? '']) {
+    if (!base) continue;
+    add(fixTrailingCommas(base), closeTruncatedJson(base));
+    const block = extractJsonBlock(fixTrailingCommas(base));
+    add(block);
+    const closed = closeTruncatedJson(base);
+    add(closed, extractJsonBlock(closed));
+  }
+
+  return candidates;
 }
 
+/** Strip code fences at the very start and end of the string. */
 function stripCodeFences(text: string): string {
   return text
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```\s*$/i, '')
     .trim();
+}
+
+/** Remove ALL ``` and ```json markers anywhere in the string. */
+function removeAllFenceMarkers(text: string): string {
+  return text.replace(/```(?:json)?\s*/gi, '').replace(/```\s*/gi, '').trim();
+}
+
+/** Return the portion of text that comes after the LAST ```json or ``` fence opener. */
+function textAfterLastFence(text: string): string | null {
+  // Match the last occurrence of ```json or ``` followed by optional whitespace/newline.
+  const match = /```(?:json)?\s*/gi;
+  let last: RegExpExecArray | null = null;
+  let m: RegExpExecArray | null;
+  while ((m = match.exec(text)) !== null) last = m;
+  if (!last) return null;
+  const after = text.slice(last.index + last[0].length).replace(/\s*```\s*$/, '').trim();
+  return after || null;
 }
 
 function fixTrailingCommas(text: string): string {
@@ -50,11 +100,12 @@ function closeTruncatedJson(text: string): string {
   let s = text.trim();
   if (!s) return s;
 
-  // Drop trailing incomplete key/value or string literal
+  // Drop trailing incomplete key/value or string literal.
   s = s.replace(/,\s*"[^"]*"?\s*:?\s*"[^"]*$/s, '');
   s = s.replace(/,\s*\{[^}]*$/s, '');
   s = s.replace(/,\s*$/s, '');
 
+  // Close an un-terminated string.
   if (/[^\\]"[^"]*$/.test(s)) {
     s = `${s}"`;
   }
@@ -87,6 +138,7 @@ function closeTruncatedJson(text: string): string {
   return fixTrailingCommas(s);
 }
 
+/** Extract the first balanced JSON object or array from text. */
 function extractJsonBlock(text: string): string | null {
   const objStart = text.indexOf('{');
   const arrStart = text.indexOf('[');
@@ -96,13 +148,9 @@ function extractJsonBlock(text: string): string | null {
   let close: string;
 
   if (objStart >= 0 && (arrStart < 0 || objStart < arrStart)) {
-    start = objStart;
-    open = '{';
-    close = '}';
+    start = objStart; open = '{'; close = '}';
   } else if (arrStart >= 0) {
-    start = arrStart;
-    open = '[';
-    close = ']';
+    start = arrStart; open = '['; close = ']';
   } else {
     return null;
   }
@@ -113,25 +161,16 @@ function extractJsonBlock(text: string): string | null {
 
   for (let i = start; i < text.length; i++) {
     const ch = text[i];
-
     if (inString) {
       if (escaped) escaped = false;
       else if (ch === '\\') escaped = true;
       else if (ch === '"') inString = false;
       continue;
     }
-
-    if (ch === '"') {
-      inString = true;
-      continue;
-    }
-
+    if (ch === '"') { inString = true; continue; }
     if (ch === open) depth += 1;
     if (ch === close) depth -= 1;
-
-    if (depth === 0) {
-      return text.slice(start, i + 1);
-    }
+    if (depth === 0) return text.slice(start, i + 1);
   }
 
   return null;
@@ -139,7 +178,7 @@ function extractJsonBlock(text: string): string | null {
 
 /** Extract complete beat objects from truncated planner output. */
 export function salvageBeatsPlan(text: string): { beats: Array<Record<string, unknown>> } | null {
-  const stripped = stripCodeFences(text);
+  const stripped = removeAllFenceMarkers(stripCodeFences(text));
   const beats: Array<Record<string, unknown>> = [];
 
   const re =

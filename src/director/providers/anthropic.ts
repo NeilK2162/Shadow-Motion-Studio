@@ -68,7 +68,20 @@ export class AnthropicProvider implements LLMProvider {
       });
 
       const textBlock = response.content.find((b) => b.type === 'text');
-      const rawText = textBlock && 'text' in textBlock ? textBlock.text : '{}';
+      let rawText = textBlock && 'text' in textBlock ? textBlock.text : '{}';
+
+      if (args.prefill) {
+        // When prefill is active the model sometimes still wraps its continuation in
+        // ```json … ``` — strip those fences from rawText before prepending the prefill.
+        rawText = rawText
+          .replace(/^```(?:json)?\s*/i, '')
+          .replace(/\s*```\s*$/i, '')
+          .trim();
+        console.debug(
+          `[anthropic] prefill="${args.prefill.slice(0, 30)}" rawText[0..80]="${rawText.slice(0, 80)}"`,
+        );
+      }
+
       // Prepend the prefill so parseLLMJson sees a complete JSON string.
       const text = args.prefill ? args.prefill + rawText : rawText;
       const usage = response.usage;

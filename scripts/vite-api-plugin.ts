@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from 'node:child_process';
+import fs from 'node:fs';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -73,22 +74,35 @@ export function apiServerPlugin(): Plugin {
         const state = await probeApi();
         if (state === 'running') {
           console.log(`[shadow-api] API already running on http://localhost:${API_PORT} — reusing it`);
-          return;
-        }
-        if (state === 'blocked') {
+        } else if (state === 'blocked') {
           console.warn(
             `[shadow-api] Port ${API_PORT} is in use by another process. Free it, then restart dev:\n` +
               `  Get-NetTCPConnection -LocalPort ${API_PORT} | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }`,
           );
           return;
+        } else {
+          console.log(`[shadow-api] Starting API on http://localhost:${API_PORT}…`);
+          start();
         }
-        console.log(`[shadow-api] Starting API on http://localhost:${API_PORT}…`);
-        start();
-      })();
 
-      server.httpServer?.on('close', stop);
-      process.on('SIGINT', stop);
-      process.on('SIGTERM', stop);
+        // Watch src/ for changes and restart the API server automatically.
+        const SRC = path.join(ROOT, 'src');
+        let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+        const watcher = fs.watch(SRC, { recursive: true }, (_event, filename) => {
+          if (!filename?.endsWith('.ts') && !filename?.endsWith('.tsx')) return;
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            console.log(`[shadow-api] ${filename} changed — restarting API server…`);
+            stop();
+            start();
+          }, 600);
+        });
+
+        const cleanup = () => { stop(); watcher.close(); };
+        server.httpServer?.on('close', cleanup);
+        process.on('SIGINT', cleanup);
+        process.on('SIGTERM', cleanup);
+      })();
     },
   };
 }

@@ -203,6 +203,8 @@ export interface TemplateDefinition {
   defaultPlacement: Placement;
   recommendedFormats: FormatId[];
   background: 'solid' | 'gradient' | 'transparent';
+  /** Two #rrggbb hex colors for a custom gradient (start → end). Only used when background = 'gradient'. */
+  backgroundColors?: [string, string];
   fields: FieldDef[];
   elements: TemplateElement[];
 }

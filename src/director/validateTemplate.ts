@@ -260,6 +260,17 @@ export function validateTemplate(input: unknown): TemplateValidationResult {
     err(errors, 'background', 'background must be solid|gradient|transparent');
   }
 
+  if ('backgroundColors' in input && input.backgroundColors !== undefined) {
+    if (
+      !Array.isArray(input.backgroundColors) ||
+      input.backgroundColors.length !== 2 ||
+      !HEX_RE.test(String(input.backgroundColors[0])) ||
+      !HEX_RE.test(String(input.backgroundColors[1]))
+    ) {
+      err(errors, 'backgroundColors', 'backgroundColors must be exactly [\"#rrggbb\", \"#rrggbb\"]');
+    }
+  }
+
   if (!Array.isArray(input.fields) || input.fields.length < 1 || input.fields.length > 12) {
     err(errors, 'fields', 'fields must contain 1..12 entries');
   }
