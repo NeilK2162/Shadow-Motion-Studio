@@ -1,11 +1,12 @@
 import { applyMotionStyle, counterUp, lFill, slideUp2 } from '@/animations/presets';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
+import { getCardLayout, spx } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
-function SkylineSvg() {
+function SkylineSvg({ bottom }: { bottom: number }) {
   return (
-    <svg viewBox="0 0 560 80" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', bottom: 68, left: 0, right: 0, width: '100%' }}>
+    <svg viewBox="0 0 560 80" xmlns="http://www.w3.org/2000/svg" style={{ position: 'absolute', bottom, left: 0, right: 0, width: '100%' }}>
       <defs>
         <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#0f0f1e" />
@@ -38,6 +39,8 @@ function SkylineSvg() {
 
 export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
+  const layout = getCardLayout('loading-screen', fields);
+  const s = layout.contentScale;
   const bigText = getField(fields, 'bigText', 'HYDERABAD');
   const barLabel = getField(fields, 'barLabel', 'Loading');
   const tip = getField(fields, 'tip', '');
@@ -48,8 +51,8 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: 560,
-          height: 360,
+          width: layout.cardWidth,
+          height: layout.cardHeight,
           background: stripCardBackground ? 'transparent' : '#000',
           position: 'relative',
           overflow: 'hidden',
@@ -59,13 +62,7 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
         }}
       >
         {!stripCardBackground && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(180deg, #08091a 0%, #040510 60%, #000 100%)',
-            }}
-          />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, #08091a 0%, #040510 60%, #000 100%)' }} />
         )}
         <div
           style={{
@@ -74,8 +71,8 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
             left: '50%',
             transform: 'translate(-50%, -60%)',
             fontFamily: theme.titleFont,
-            fontSize: 60,
-            letterSpacing: 12,
+            fontSize: spx(60, s),
+            letterSpacing: spx(12, s),
             color: theme.gold,
             opacity: 0.06,
             whiteSpace: 'nowrap',
@@ -84,12 +81,12 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
         >
           {bigText}
         </div>
-        <SkylineSvg />
+        <SkylineSvg bottom={spx(68, s)} />
         <div
           style={{
             position: 'relative',
             zIndex: 2,
-            padding: '14px 24px 20px',
+            padding: `${spx(14, s)}px ${spx(24, s)}px ${spx(20, s)}px`,
             background: 'linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.95) 20%)',
             borderTop: '1px solid #111',
             ...applyMotionStyle(slideUp2(time, 0, 0.5, globalSpeed)),
@@ -100,17 +97,17 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
               display: 'flex',
               justifyContent: 'space-between',
               fontFamily: theme.monoFont,
-              fontSize: 9,
+              fontSize: spx(9, s),
               color: theme.dim,
               letterSpacing: 3,
-              marginBottom: 7,
+              marginBottom: spx(7, s),
               textTransform: 'uppercase',
             }}
           >
             <span>{barLabel}</span>
             <span>{pct}%</span>
           </div>
-          <div style={{ width: '100%', height: 2, background: theme.dark4, overflow: 'hidden', marginBottom: 12 }}>
+          <div style={{ width: '100%', height: spx(2, s), background: theme.dark4, overflow: 'hidden', marginBottom: spx(12, s) }}>
             <div
               style={{
                 height: '100%',
@@ -119,7 +116,7 @@ export function LoadingScreen({ fields, theme = shadowOwnerTheme, globalSpeed = 
               }}
             />
           </div>
-          <div style={{ fontFamily: theme.monoFont, fontSize: 10, color: theme.dim, lineHeight: 1.65 }}>
+          <div style={{ fontFamily: theme.monoFont, fontSize: spx(10, s), color: theme.dim, lineHeight: 1.65 }}>
             <em style={{ color: theme.gold, fontStyle: 'normal' }}>TIP:</em> {tip}
           </div>
         </div>

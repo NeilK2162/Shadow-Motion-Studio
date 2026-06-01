@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Download, FolderOpen, Save, Upload } from 'lucide-react';
-import { DEFAULT_MISSION_CARD_LAYOUT } from '@/components/templates/shared/missionCardLayout';
+import { DEFAULT_LAYOUT_FIELDS, getCardLayout, LAYOUT_FIELD_KEYS } from '@/components/templates/shared/cardLayout';
 import { TEMPLATE_DEFAULTS } from '@/data/templateDefaults';
 import { useEditorStore } from '@/store/editorStore';
 import type { Project, StatBar, StatBox, StatField } from '@/types';
 
-const LAYOUT_FIELD_KEYS = new Set(['cardWidth', 'cardHeight', 'contentScale', 'glowIntensity', 'glowSpread', 'glowCenterY']);
+const LAYOUT_FIELD_KEYS_SET = LAYOUT_FIELD_KEYS;
 
 function TextField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
@@ -85,7 +85,7 @@ export function Properties() {
   const renderTextFields = () => {
     const defaults = TEMPLATE_DEFAULTS[project.template].fields;
     return Object.entries(defaults)
-      .filter(([key, value]) => (typeof value === 'string' || typeof value === 'number') && !LAYOUT_FIELD_KEYS.has(key))
+      .filter(([key, value]) => (typeof value === 'string' || typeof value === 'number') && !LAYOUT_FIELD_KEYS_SET.has(key))
       .map(([key, defaultValue]) => (
         <TextField
           key={key}
@@ -97,17 +97,48 @@ export function Properties() {
   };
 
   const renderLayoutFields = () => {
-    if (project.template !== 'mission-passed' && project.template !== 'mission-failed') return null;
-    const d = DEFAULT_MISSION_CARD_LAYOUT;
+    const d = DEFAULT_LAYOUT_FIELDS;
+    const layout = getCardLayout(project.template, fields);
+    const hasGlow = layout.hasGlow;
+
     return (
       <>
-        <div className="font-mono text-[9px] uppercase tracking-[1px] text-gold">Card & Glow</div>
-        <NumberField label="Card Width" value={Number(fields.cardWidth ?? d.cardWidth)} onChange={(v) => setField('cardWidth', v)} />
-        <NumberField label="Card Height" value={Number(fields.cardHeight ?? d.cardHeight)} onChange={(v) => setField('cardHeight', v)} />
-        <FloatField label="Content Scale" value={Number(fields.contentScale ?? d.contentScale)} step={0.01} min={0.5} max={3} onChange={(v) => setField('contentScale', v)} />
-        <FloatField label="Glow Intensity" value={Number(fields.glowIntensity ?? d.glowIntensity)} step={0.01} min={0} max={1} onChange={(v) => setField('glowIntensity', v)} />
-        <NumberField label="Glow Spread %" value={Number(fields.glowSpread ?? d.glowSpread)} onChange={(v) => setField('glowSpread', v)} />
-        <NumberField label="Glow Center Y %" value={Number(fields.glowCenterY ?? d.glowCenterY)} onChange={(v) => setField('glowCenterY', v)} />
+        <div className="font-mono text-[9px] uppercase tracking-[1px] text-gold">Card Size</div>
+        <FloatField
+          label="Size Multiplier"
+          value={Number(fields.sizeMultiplier ?? layout.sizeMultiplier)}
+          step={0.05}
+          min={0.5}
+          max={3}
+          onChange={(v) => setField('sizeMultiplier', v)}
+        />
+        <FloatField
+          label="Aspect Multiplier"
+          value={Number(fields.aspectMultiplier ?? d.aspectMultiplier)}
+          step={0.05}
+          min={0.5}
+          max={2}
+          onChange={(v) => setField('aspectMultiplier', v)}
+        />
+        <FloatField
+          label="Content Scale (0 = auto)"
+          value={Number(fields.contentScale ?? d.contentScale)}
+          step={0.05}
+          min={0}
+          max={3}
+          onChange={(v) => setField('contentScale', v)}
+        />
+        <div className="font-mono text-[9px] text-dim">
+          → {layout.cardWidth} × {layout.cardHeight}px · scale {layout.contentScale.toFixed(2)}
+        </div>
+        {hasGlow && (
+          <>
+            <div className="mt-2 font-mono text-[9px] uppercase tracking-[1px] text-gold">Glow</div>
+            <FloatField label="Glow Intensity" value={Number(fields.glowIntensity ?? d.glowIntensity)} step={0.01} min={0} max={1} onChange={(v) => setField('glowIntensity', v)} />
+            <NumberField label="Glow Spread %" value={Number(fields.glowSpread ?? d.glowSpread)} onChange={(v) => setField('glowSpread', v)} />
+            <NumberField label="Glow Center Y %" value={Number(fields.glowCenterY ?? d.glowCenterY)} onChange={(v) => setField('glowCenterY', v)} />
+          </>
+        )}
       </>
     );
   };

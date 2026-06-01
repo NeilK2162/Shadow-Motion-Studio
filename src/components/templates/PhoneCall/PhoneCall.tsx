@@ -1,10 +1,13 @@
 import { applyMotionStyle, slideUp2 } from '@/animations/presets';
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
+import { getCardLayout, spx } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
 
 export function PhoneCall({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
+  const layout = getCardLayout('phone-call', fields);
+  const s = layout.contentScale;
   const ptag = getField(fields, 'ptag', '☎ Incoming Call');
   const pname = getField(fields, 'pname', '');
   const prole = getField(fields, 'prole', '');
@@ -15,39 +18,40 @@ export function PhoneCall({ fields, theme = shadowOwnerTheme, globalSpeed = 1, s
     <div style={themeVars(theme)}>
       <div
         style={{
-          width: 420,
+          width: layout.cardWidth,
+          minHeight: layout.cardHeight,
           background: stripCardBackground ? 'transparent' : 'rgba(8,8,8,0.96)',
           border: stripCardBackground ? 'none' : `1px solid ${theme.dark4}`,
-          padding: 24,
+          padding: spx(24, s),
           ...applyMotionStyle(slideUp2(time, 0, 0.4, globalSpeed)),
         }}
       >
-        <div style={{ fontFamily: theme.monoFont, fontSize: 9, color: theme.dim, letterSpacing: 3, textAlign: 'center', marginBottom: 18, textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: theme.monoFont, fontSize: spx(9, s), color: theme.dim, letterSpacing: 3, textAlign: 'center', marginBottom: spx(18, s), textTransform: 'uppercase' }}>
           {ptag}
         </div>
-        <div style={{ fontFamily: theme.titleFont, fontSize: 38, color: '#fff', letterSpacing: 3, textAlign: 'center', marginBottom: 6 }}>{pname}</div>
+        <div style={{ fontFamily: theme.titleFont, fontSize: spx(38, s), color: '#fff', letterSpacing: 3, textAlign: 'center', marginBottom: spx(6, s) }}>{pname}</div>
         <div
           style={{
             fontFamily: theme.monoFont,
-            fontSize: 10,
+            fontSize: spx(10, s),
             color: theme.dim,
             textAlign: 'center',
             letterSpacing: 1.5,
-            marginBottom: 24,
-            paddingBottom: 20,
+            marginBottom: spx(24, s),
+            paddingBottom: spx(20, s),
             borderBottom: `1px solid ${theme.dark4}`,
           }}
         >
           {prole}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 52 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 50, height: 50, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, background: '#1a3d1a', color: '#5abf5a' }}>✓</div>
-            <div style={{ fontFamily: theme.monoFont, fontSize: 9, color: theme.dim, letterSpacing: 1 }}>{acceptLabel}</div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: spx(52, s) }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spx(8, s) }}>
+            <div style={{ width: spx(50, s), height: spx(50, s), borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: spx(18, s), background: '#1a3d1a', color: '#5abf5a' }}>✓</div>
+            <div style={{ fontFamily: theme.monoFont, fontSize: spx(9, s), color: theme.dim, letterSpacing: 1 }}>{acceptLabel}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 50, height: 50, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, background: '#3d1a1a', color: '#bf5a5a' }}>✕</div>
-            <div style={{ fontFamily: theme.monoFont, fontSize: 9, color: theme.dim, letterSpacing: 1 }}>{declineLabel}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: spx(8, s) }}>
+            <div style={{ width: spx(50, s), height: spx(50, s), borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: spx(18, s), background: '#3d1a1a', color: '#bf5a5a' }}>✕</div>
+            <div style={{ fontFamily: theme.monoFont, fontSize: spx(9, s), color: theme.dim, letterSpacing: 1 }}>{declineLabel}</div>
           </div>
         </div>
       </div>

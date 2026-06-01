@@ -5,16 +5,23 @@ export interface TemplateDefaults {
   durationSeconds: number;
 }
 
+/** Shared layout fields included in every template. */
+const LAYOUT = {
+  sizeMultiplier: 1.0,
+  aspectMultiplier: 1.0,
+  contentScale: 0,
+  glowIntensity: 0.18,
+  glowSpread: 85,
+  glowCenterY: 60,
+};
+
+const MISSION_LAYOUT = { ...LAYOUT, sizeMultiplier: 1.33 };
+
 export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'mission-passed': {
     durationSeconds: 1.6,
     fields: {
-      cardWidth: 720,
-      cardHeight: 480,
-      contentScale: 1.33,
-      glowIntensity: 0.18,
-      glowSpread: 85,
-      glowCenterY: 60,
+      ...MISSION_LAYOUT,
       check: '✓',
       titleAccent: 'MISSION',
       titleMain: 'PASSED',
@@ -30,12 +37,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'mission-failed': {
     durationSeconds: 1.6,
     fields: {
-      cardWidth: 720,
-      cardHeight: 480,
-      contentScale: 1.33,
-      glowIntensity: 0.18,
-      glowSpread: 85,
-      glowCenterY: 60,
+      ...MISSION_LAYOUT,
       cross: '✕',
       titleAccent: 'MISSION',
       titleMain: 'FAILED',
@@ -47,6 +49,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'chapter-card': {
     durationSeconds: 1.8,
     fields: {
+      ...LAYOUT,
       num: 'CHAPTER 01',
       titleLine1: 'ENTERING',
       titleLine2: 'HYDERABAD',
@@ -57,6 +60,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'loading-screen': {
     durationSeconds: 2.2,
     fields: {
+      ...LAYOUT,
       bigText: 'HYDERABAD',
       barLabel: 'Loading',
       tip: 'In Hyderabad, the best meetings happen over chai. Every NPC you talk to could be your next client.',
@@ -66,6 +70,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'side-quest': {
     durationSeconds: 1.4,
     fields: {
+      ...LAYOUT,
       qtag: 'New Side Quest Available',
       qtitle: 'THE UPWORK CLIENT',
       qdesc:
@@ -79,6 +84,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'enter-location': {
     durationSeconds: 2.0,
     fields: {
+      ...LAYOUT,
       eltag: 'Now Entering',
       lname: 'BANJARA HILLS',
       lsub: 'Hyderabad, Telangana · Hustle Zone Active',
@@ -87,6 +93,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'phone-call': {
     durationSeconds: 1.6,
     fields: {
+      ...LAYOUT,
       ptag: '☎ Incoming Call',
       pname: 'UPWORK CLIENT',
       prole: 'Project Value: ₹45,000 · 2 Missed Calls Before This',
@@ -97,6 +104,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'cheat-code': {
     durationSeconds: 1.4,
     fields: {
+      ...LAYOUT,
       ctag: '⚡ Cheat Code Activated',
       code: 'HUSTLEHARD',
       cdesc: 'First Upwork payment received. The system actually works.',
@@ -106,6 +114,7 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
   'weekly-stats': {
     durationSeconds: 2.4,
     fields: {
+      ...LAYOUT,
       stitle: 'WEEKLY DEBRIEF',
       ssub: 'Hyderabad Arc · Week 03',
       sweek: 'May 2026\nMain Quest Active',

@@ -2,12 +2,12 @@ import { applyMotionStyle, popIn, scanAnim, slideUp } from '@/animations/presets
 import { useTemplateTime } from '@/hooks/useTemplateTime';
 import { shadowOwnerTheme } from '@/themes/tokens';
 import type { StatField } from '@/types';
+import { getCardLayout, glowGradient, spx } from '../shared/cardLayout';
 import { getField, themeVars, type TemplateComponentProps } from '../shared/types';
-import { getMissionCardLayout, glowGradient } from '../shared/missionCardLayout';
 
 export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 1, stripCardBackground = false }: TemplateComponentProps) {
   const time = useTemplateTime(globalSpeed);
-  const layout = getMissionCardLayout(fields);
+  const layout = getCardLayout('mission-passed', fields);
   const s = layout.contentScale;
   const check = getField(fields, 'check', '✓');
   const titleAccent = getField(fields, 'titleAccent', 'MISSION');
@@ -38,7 +38,7 @@ export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 
             top: 0,
             left: 0,
             right: 0,
-            height: 2 * s,
+            height: spx(2, s),
             background: `linear-gradient(90deg, transparent 0%, ${theme.greenBright} 50%, transparent 100%)`,
             ...applyMotionStyle(scanAnim(time, 0, 0.8, globalSpeed)),
           }}
@@ -52,10 +52,10 @@ export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 
         />
         <div
           style={{
-            fontSize: 44 * s,
+            fontSize: spx(44, s),
             color: theme.greenBright,
             position: 'relative',
-            textShadow: `0 0 ${20 * s}px rgba(90,200,90,0.4)`,
+            textShadow: `0 0 ${spx(20, s)}px rgba(90,200,90,0.4)`,
             ...applyMotionStyle(popIn(time, 0, 0.35, globalSpeed)),
           }}
         >
@@ -65,12 +65,12 @@ export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 
           style={{
             position: 'relative',
             fontFamily: theme.titleFont,
-            fontSize: 64 * s,
-            letterSpacing: 6 * s,
+            fontSize: spx(64, s),
+            letterSpacing: spx(6, s),
             color: '#fff',
             lineHeight: 1,
             textAlign: 'center',
-            ...applyMotionStyle(slideUp(time, 0.15, 0.4, globalSpeed, 18 * s)),
+            ...applyMotionStyle(slideUp(time, 0.15, 0.4, globalSpeed, spx(18, s))),
           }}
         >
           <span style={{ color: theme.greenBright }}>{titleAccent}</span>
@@ -81,11 +81,11 @@ export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 
           style={{
             position: 'relative',
             fontFamily: theme.monoFont,
-            fontSize: 11 * s,
+            fontSize: spx(11, s),
             color: '#888',
             letterSpacing: 2,
-            marginTop: 10 * s,
-            ...applyMotionStyle(slideUp(time, 0.3, 0.4, globalSpeed, 18 * s)),
+            marginTop: spx(10, s),
+            ...applyMotionStyle(slideUp(time, 0.3, 0.4, globalSpeed, spx(18, s))),
           }}
         >
           {sub}
@@ -95,11 +95,11 @@ export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 
             position: 'relative',
             fontFamily: theme.uiFont,
             fontWeight: 600,
-            fontSize: 17 * s,
+            fontSize: spx(17, s),
             color: theme.gold,
             letterSpacing: 4,
-            marginTop: 20 * s,
-            ...applyMotionStyle(slideUp(time, 0.45, 0.4, globalSpeed, 18 * s)),
+            marginTop: spx(20, s),
+            ...applyMotionStyle(slideUp(time, 0.45, 0.4, globalSpeed, spx(18, s))),
           }}
         >
           {resp}
@@ -108,15 +108,15 @@ export function MissionPassed({ fields, theme = shadowOwnerTheme, globalSpeed = 
           style={{
             position: 'relative',
             display: 'flex',
-            gap: 36 * s,
-            marginTop: 16 * s,
-            ...applyMotionStyle(slideUp(time, 0.6, 0.4, globalSpeed, 18 * s)),
+            gap: spx(36, s),
+            marginTop: spx(16, s),
+            ...applyMotionStyle(slideUp(time, 0.6, 0.4, globalSpeed, spx(18, s))),
           }}
         >
           {stats.map((stat) => (
             <div key={stat.label} style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: theme.titleFont, fontSize: 20 * s, color: theme.gold, letterSpacing: 2 }}>{stat.value}</div>
-              <div style={{ fontFamily: theme.monoFont, fontSize: 8 * s, color: theme.dim, letterSpacing: 1, marginTop: 2 }}>{stat.label}</div>
+              <div style={{ fontFamily: theme.titleFont, fontSize: spx(20, s), color: theme.gold, letterSpacing: 2 }}>{stat.value}</div>
+              <div style={{ fontFamily: theme.monoFont, fontSize: spx(8, s), color: theme.dim, letterSpacing: 1, marginTop: 2 }}>{stat.label}</div>
             </div>
           ))}
         </div>
