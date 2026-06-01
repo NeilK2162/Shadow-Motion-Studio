@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Download, FolderOpen, Save, Upload } from 'lucide-react';
-import { DEFAULT_LAYOUT_FIELDS, getCardLayout, LAYOUT_FIELD_KEYS } from '@/components/templates/shared/cardLayout';
+import { DEFAULT_LAYOUT_FIELDS, getCardLayout, getDefaultPlacement, LAYOUT_FIELD_KEYS } from '@/components/templates/shared/cardLayout';
+import { PLATFORM_EXPORT_PRESETS } from '@/lib/formats';
+import { PLACEMENT_OPTIONS } from '@/lib/placement';
 import { TEMPLATE_DEFAULTS } from '@/data/templateDefaults';
 import { useEditorStore } from '@/store/editorStore';
-import type { Project, StatBar, StatBox, StatField } from '@/types';
+import type { Project, PollOption, StatBar, StatBox, StatField, StatusBar } from '@/types';
 
 const LAYOUT_FIELD_KEYS_SET = LAYOUT_FIELD_KEYS;
 
@@ -75,6 +77,8 @@ export function Properties() {
   const setExportFormat = useEditorStore((s) => s.setExportFormat);
   const setExportTransparent = useEditorStore((s) => s.setExportTransparent);
   const setStripCardBackground = useEditorStore((s) => s.setStripCardBackground);
+  const setPlacement = useEditorStore((s) => s.setPlacement);
+  const applyPlatformExportPreset = useEditorStore((s) => s.applyPlatformExportPreset);
   const loadProject = useEditorStore((s) => s.loadProject);
   const resetProject = useEditorStore((s) => s.resetProject);
 
@@ -98,12 +102,27 @@ export function Properties() {
 
   const renderLayoutFields = () => {
     const d = DEFAULT_LAYOUT_FIELDS;
-    const layout = getCardLayout(project.template, fields);
+    const layout = getCardLayout(project.template, fields, project.export.formatId);
     const hasGlow = layout.hasGlow;
+    const placement = project.placement ?? getDefaultPlacement(project.template);
 
     return (
       <>
         <div className="font-mono text-[9px] uppercase tracking-[1px] text-gold">Card Size</div>
+        <label className="flex flex-col gap-1">
+          <span className="font-mono text-[9px] uppercase tracking-[1px] text-dim">Placement</span>
+          <select
+            value={placement}
+            onChange={(e) => setPlacement(e.target.value as typeof placement)}
+            className="border border-dark5 bg-dark0 px-2 py-1.5 font-mono text-xs text-text"
+          >
+            {PLACEMENT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
         <FloatField
           label="Size Multiplier"
           value={Number(fields.sizeMultiplier ?? layout.sizeMultiplier)}
@@ -160,6 +179,40 @@ export function Properties() {
           }} />
         </div>
       ));
+    }
+    if (project.template === 'status-hud') {
+      const bars = (fields.bars as StatusBar[]) ?? [];
+      return (
+        <>
+          {bars.map((bar, i) => (
+            <div key={i} className="grid grid-cols-3 gap-2">
+              <TextField label={`Bar ${i + 1} Label`} value={bar.label} onChange={(v) => {
+                const next = [...bars]; next[i] = { ...next[i], label: v }; setField('bars', next);
+              }} />
+              <NumberField label="Pct" value={bar.pct} onChange={(v) => {
+                const next = [...bars]; next[i] = { ...next[i], pct: v }; setField('bars', next);
+              }} />
+              <TextField label="Color" value={bar.color} onChange={(v) => {
+                const next = [...bars]; next[i] = { ...next[i], color: v }; setField('bars', next);
+              }} />
+            </div>
+          ))}
+        </>
+      );
+    }
+    if (project.template === 'this-or-that') {
+      const optionA = (fields.optionA as PollOption) ?? { key: 'A', label: '', pct: 50 };
+      const optionB = (fields.optionB as PollOption) ?? { key: 'B', label: '', pct: 50 };
+      return (
+        <>
+          <TextField label="Option A Key" value={optionA.key} onChange={(v) => setField('optionA', { ...optionA, key: v })} />
+          <TextField label="Option A Label" value={optionA.label} onChange={(v) => setField('optionA', { ...optionA, label: v })} />
+          <NumberField label="Option A Pct" value={optionA.pct} onChange={(v) => setField('optionA', { ...optionA, pct: v })} />
+          <TextField label="Option B Key" value={optionB.key} onChange={(v) => setField('optionB', { ...optionB, key: v })} />
+          <TextField label="Option B Label" value={optionB.label} onChange={(v) => setField('optionB', { ...optionB, label: v })} />
+          <NumberField label="Option B Pct" value={optionB.pct} onChange={(v) => setField('optionB', { ...optionB, pct: v })} />
+        </>
+      );
     }
     if (project.template === 'weekly-stats') {
       const boxes = (fields.boxes as StatBox[]) ?? [];
@@ -275,6 +328,21 @@ export function Properties() {
         <div className="space-y-3">
           <div className="font-mono text-[9px] uppercase tracking-[1px] text-gold">Export</div>
           <label className="flex flex-col gap-1">
+            <span className="font-mono text-[9px] uppercase tracking-[1px] text-dim">Platform Preset</span>
+            <select
+              defaultValue=""
+              onChange={(e) => e.target.value && applyPlatformExportPreset(e.target.value)}
+              className="border border-dark5 bg-dark0 px-2 py-1.5 font-mono text-xs text-text"
+            >
+              <option value="">— Quick preset —</option>
+              {PLATFORM_EXPORT_PRESETS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1">
             <span className="font-mono text-[9px] uppercase tracking-[1px] text-dim">Resolution</span>
             <select
               value={project.export.resolution}
@@ -284,6 +352,7 @@ export function Properties() {
               <option value="1920x1080">1920x1080</option>
               <option value="1080x1920">1080x1920</option>
               <option value="1080x1350">1080x1350</option>
+              <option value="1080x1080">1080x1080</option>
               <option value="1280x720">1280x720</option>
             </select>
           </label>

@@ -1,3 +1,4 @@
+import type { FormatId } from '@/lib/formats';
 import type { ThemeTokens } from '@/themes/tokens';
 
 export interface TemplateComponentProps {
@@ -5,6 +6,7 @@ export interface TemplateComponentProps {
   theme?: ThemeTokens;
   globalSpeed?: number;
   stripCardBackground?: boolean;
+  formatId?: FormatId;
 }
 
 export function getField<T>(fields: Record<string, unknown>, key: string, fallback: T): T {

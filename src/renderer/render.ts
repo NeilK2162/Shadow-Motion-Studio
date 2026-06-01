@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
 import { createDefaultProject, projectToInputProps } from '../remotion/inputProps';
+import { getFormat } from '../lib/formats';
 import type { Project } from '../types';
 import { RESOLUTION_MAP } from '../types';
 import { getDefaultFields } from '../data/templateDefaults';
@@ -16,14 +17,12 @@ let bundleLocation: string | null = null;
 async function getBundle(): Promise<string> {
   if (bundleLocation) return bundleLocation;
 
-  // Production (packaged app): use the pre-built Remotion bundle, no webpack at runtime.
   const prebuilt = getServeUrl();
   if (prebuilt) {
     bundleLocation = prebuilt;
     return bundleLocation;
   }
 
-  // Dev: bundle the compositions at runtime via webpack.
   const { bundle } = await import('@remotion/bundler');
   const { webpackOverride } = await import('../remotion/webpack-override');
   const entry = path.join(ROOT, 'src', 'remotion', 'index.ts');
@@ -47,10 +46,31 @@ function mergeProject(partial: Partial<Project>): Project {
     theme: { ...base.theme, ...partial.theme },
     animation: { ...base.animation, ...partial.animation },
     export: { ...base.export, ...partial.export },
+    placement: partial.placement ?? base.placement,
   };
 }
 
-export async function renderProject(project: Project): Promise<string> {
+function formatSuffix(project: Project): string {
+  const formatId = project.export.formatId;
+  if (!formatId) {
+    const res = project.export.resolution;
+    if (res === '1080x1920') return '_9x16';
+    if (res === '1080x1080') return '_1x1';
+    if (res === '1080x1350') return '_4x5';
+    if (res === '1280x720') return '_720p';
+    return '_16x9';
+  }
+  const map: Record<string, string> = {
+    'youtube-landscape': '_16x9',
+    'youtube-720': '_720p',
+    'shorts-vertical': '_9x16',
+    'feed-square': '_1x1',
+    'feed-portrait': '_4x5',
+  };
+  return map[formatId] ?? '';
+}
+
+export async function renderProject(project: Project, outputDir?: string): Promise<string> {
   const serveUrl = await getBundle();
   const inputProps = projectToInputProps(project);
   const compositionId = project.template;
@@ -61,12 +81,13 @@ export async function renderProject(project: Project): Promise<string> {
     inputProps,
   });
 
-  const exportsDir = getExportsDir();
+  const exportsDir = outputDir ?? getExportsDir();
   await fs.mkdir(exportsDir, { recursive: true });
 
   const timestamp = Date.now();
   const ext = project.export.format;
-  const outputPath = path.join(exportsDir, `${compositionId}-${timestamp}.${ext}`);
+  const suffix = formatSuffix(project);
+  const outputPath = path.join(exportsDir, `${compositionId}${suffix}-${timestamp}.${ext}`);
 
   const { width, height } = RESOLUTION_MAP[project.export.resolution];
   const compositionOverride = {
@@ -109,10 +130,27 @@ export async function renderBatch(items: Partial<Project>[]): Promise<string> {
   await fs.mkdir(folder, { recursive: true });
 
   for (let i = 0; i < items.length; i++) {
-    const project = mergeProject(items[i]);
-    const output = await renderProject({ ...project, export: { ...project.export, format: project.export.format ?? 'webm' } });
-    const dest = path.join(folder, path.basename(output));
-    await fs.copyFile(output, dest);
+    const item = items[i];
+    const project = mergeProject(item);
+
+    // Support multi-format fan-out via formats array on batch item
+    const formats = (item as Partial<Project> & { formats?: string[] }).formats;
+    if (formats && formats.length > 0) {
+      for (const formatId of formats) {
+        const format = getFormat(formatId as Parameters<typeof getFormat>[0]);
+        const multiProject: Project = {
+          ...project,
+          export: {
+            ...project.export,
+            formatId: format.id,
+            resolution: format.resolution,
+          },
+        };
+        await renderProject({ ...multiProject, export: { ...multiProject.export, format: project.export.format ?? 'webm' } }, folder);
+      }
+    } else {
+      await renderProject({ ...project, export: { ...project.export, format: project.export.format ?? 'webm' } }, folder);
+    }
   }
 
   return folder;

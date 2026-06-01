@@ -133,12 +133,124 @@ export const TEMPLATE_DEFAULTS: Record<TemplateId, TemplateDefaults> = {
       stars: 3,
     },
   },
+  'wanted-level': {
+    durationSeconds: 2.8,
+    fields: {
+      ...LAYOUT,
+      wtag: 'WANTED',
+      stars: 3,
+      maxStars: 5,
+      litChar: '★',
+      dimChar: '☆',
+      flashOnGain: true,
+    },
+  },
+  'cash-pickup': {
+    durationSeconds: 2.2,
+    fields: {
+      ...LAYOUT,
+      amountPrefix: '₹',
+      amount: 50000,
+      delta: '+₹50,000',
+      label: 'WALLET',
+      positive: true,
+    },
+  },
+  'status-hud': {
+    durationSeconds: 2.6,
+    fields: {
+      ...LAYOUT,
+      showPct: true,
+      bars: [
+        { label: 'HEALTH', pct: 82, color: '#5cbf60' },
+        { label: 'ARMOR', pct: 64, color: '#e8c84a' },
+        { label: 'ENERGY', pct: 48, color: '#d44040' },
+      ],
+    },
+  },
+  'gps-route': {
+    durationSeconds: 3.0,
+    fields: {
+      ...LAYOUT,
+      gtag: 'ROUTE SET',
+      dest: 'NEXT: FIRST 1,000 SUBS',
+      distance: '2.4 KM · 6 MIN',
+      showRadar: true,
+    },
+  },
+  'character-intro': {
+    durationSeconds: 2.8,
+    fields: {
+      ...LAYOUT,
+      tag: 'NOW INTRODUCING',
+      name: 'THE SHADOW OWNER',
+      role: 'Founder · Builder · Operator',
+      accentColor: '#e8c84a',
+    },
+  },
+  'now-playing': {
+    durationSeconds: 3.2,
+    fields: {
+      ...LAYOUT,
+      station: 'SHADOW FM 101.1',
+      track: 'Hustle Theme — Late Nights',
+      showEq: true,
+    },
+  },
+  'wasted': {
+    durationSeconds: 2.4,
+    fields: {
+      ...LAYOUT,
+      bigText: 'WASTED',
+      sub: 'YOU LET THE STREAK DIE',
+      overlayOpacity: 0.88,
+      desaturate: true,
+    },
+  },
+  'subscribe-prompt': {
+    durationSeconds: 3.0,
+    fields: {
+      ...LAYOUT,
+      headline: 'NEW OBJECTIVE',
+      action: 'SUBSCRIBE',
+      desc: 'Join the crew. New mission every week.',
+      reward: '+1 RESPECT',
+      cta: 'TAP THE BELL',
+      pulseCta: true,
+    },
+  },
+  'countdown': {
+    durationSeconds: 4.0,
+    fields: {
+      ...LAYOUT,
+      from: 3,
+      goText: 'GO',
+      caption: 'MISSION STARTS IN',
+      showRing: true,
+    },
+  },
+  'this-or-that': {
+    durationSeconds: 3.0,
+    fields: {
+      ...LAYOUT,
+      question: 'WHICH PATH?',
+      prompt: 'Comment A or B 👇',
+      optionA: { key: 'A', label: 'GO ALL IN', pct: 62 },
+      optionB: { key: 'B', label: 'PLAY IT SAFE', pct: 38 },
+      showPct: true,
+      splitOrientation: 'horizontal',
+    },
+  },
 };
 
 export function getDefaultFields(template: TemplateId): Record<string, unknown> {
   return structuredClone(TEMPLATE_DEFAULTS[template].fields);
 }
 
-export function getDefaultDurationSeconds(template: TemplateId): number {
+export function getDefaultDurationSeconds(template: TemplateId, fields?: Record<string, unknown>): number {
+  if (template === 'countdown') {
+    const from = Number(fields?.from ?? TEMPLATE_DEFAULTS.countdown.fields.from ?? 3);
+    return from + 1;
+  }
   return TEMPLATE_DEFAULTS[template].durationSeconds;
 }

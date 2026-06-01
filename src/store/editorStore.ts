@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { getDefaultDurationSeconds, getDefaultFields } from '@/data/templateDefaults';
+import { getDefaultPlacement } from '@/components/templates/shared/cardLayout';
+import { getFormat, PLATFORM_EXPORT_PRESETS, type FormatId } from '@/lib/formats';
+import type { Placement } from '@/lib/placement';
 import { createDefaultProject } from '@/remotion/inputProps';
 import type { BackgroundMode, Project, TemplateId } from '@/types';
 import { builtInThemes, shadowOwnerTheme } from '@/themes/tokens';
@@ -9,22 +12,33 @@ interface EditorState {
   previewBackground: BackgroundMode;
   customBackground: string;
   playerKey: number;
+  showSafeAreaGuides: boolean;
+  platformFilter: 'all' | 'youtube' | 'reels' | 'feed';
   setTemplate: (template: TemplateId) => void;
   setField: (key: string, value: unknown) => void;
   setFields: (fields: Record<string, unknown>) => void;
   setThemeName: (name: string) => void;
   setGlobalSpeed: (speed: number) => void;
   setDurationInFrames: (frames: number) => void;
+  setFormat: (formatId: FormatId) => void;
+  setPlacement: (placement: Placement) => void;
   setExportResolution: (resolution: Project['export']['resolution']) => void;
   setExportFps: (fps: 30 | 60) => void;
   setExportFormat: (format: Project['export']['format']) => void;
   setExportTransparent: (transparent: boolean) => void;
   setStripCardBackground: (strip: boolean) => void;
+  applyPlatformExportPreset: (presetId: string) => void;
   setPreviewBackground: (mode: BackgroundMode) => void;
   setCustomBackground: (color: string) => void;
+  setShowSafeAreaGuides: (show: boolean) => void;
+  setPlatformFilter: (filter: 'all' | 'youtube' | 'reels' | 'feed') => void;
   loadProject: (project: Project) => void;
   resetProject: () => void;
   replay: () => void;
+}
+
+function durationFrames(template: TemplateId, fields: Record<string, unknown>, fps: number): number {
+  return Math.ceil((getDefaultDurationSeconds(template, fields) + 1) * fps);
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -32,18 +46,24 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   previewBackground: 'dark',
   customBackground: '#080808',
   playerKey: 0,
+  showSafeAreaGuides: true,
+  platformFilter: 'all',
 
   setTemplate: (template) => {
-    const durationSeconds = getDefaultDurationSeconds(template);
     const fps = get().project.export.fps;
+    const fields = getDefaultFields(template);
     set({
       project: {
         ...createDefaultProject(template),
         theme: get().project.theme,
-        export: get().project.export,
+        export: {
+          ...get().project.export,
+          formatId: get().project.export.formatId ?? 'youtube-landscape',
+        },
+        placement: getDefaultPlacement(template),
         animation: {
           globalSpeed: 1,
-          durationInFrames: Math.ceil((durationSeconds + 1) * fps),
+          durationInFrames: durationFrames(template, fields, fps),
         },
       },
       playerKey: get().playerKey + 1,
@@ -51,12 +71,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   setField: (key, value) =>
-    set((state) => ({
-      project: {
-        ...state.project,
-        fields: { ...state.project.fields, [key]: value },
-      },
-    })),
+    set((state) => {
+      const fields = { ...state.project.fields, [key]: value };
+      const durationInFrames =
+        key === 'from' && state.project.template === 'countdown'
+          ? durationFrames('countdown', fields, state.project.export.fps)
+          : state.project.animation.durationInFrames;
+      return {
+        project: {
+          ...state.project,
+          fields,
+          animation: { ...state.project.animation, durationInFrames },
+        },
+      };
+    }),
 
   setFields: (fields) =>
     set((state) => ({
@@ -87,25 +115,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       },
     })),
 
+  setFormat: (formatId) => {
+    const format = getFormat(formatId);
+    set((state) => ({
+      project: {
+        ...state.project,
+        export: {
+          ...state.project.export,
+          formatId,
+          resolution: format.resolution,
+        },
+      },
+      playerKey: state.playerKey + 1,
+    }));
+  },
+
+  setPlacement: (placement) =>
+    set((state) => ({
+      project: { ...state.project, placement },
+      playerKey: state.playerKey + 1,
+    })),
+
   setExportResolution: (resolution) =>
     set((state) => ({
       project: { ...state.project, export: { ...state.project.export, resolution } },
+      playerKey: state.playerKey + 1,
     })),
 
   setExportFps: (fps) =>
-    set((state) => {
-      const durationSeconds = getDefaultDurationSeconds(state.project.template);
-      return {
-        project: {
-          ...state.project,
-          export: { ...state.project.export, fps },
-          animation: {
-            ...state.project.animation,
-            durationInFrames: Math.ceil((durationSeconds + 1) * fps),
-          },
+    set((state) => ({
+      project: {
+        ...state.project,
+        export: { ...state.project.export, fps },
+        animation: {
+          ...state.project.animation,
+          durationInFrames: durationFrames(state.project.template, state.project.fields, fps),
         },
-      };
-    }),
+      },
+    })),
 
   setExportFormat: (format) =>
     set((state) => ({
@@ -122,15 +169,44 @@ export const useEditorStore = create<EditorState>((set, get) => ({
       project: { ...state.project, export: { ...state.project.export, stripCardBackground: strip } },
     })),
 
+  applyPlatformExportPreset: (presetId) => {
+    const preset = PLATFORM_EXPORT_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    const format = getFormat(preset.formatId);
+    set((state) => ({
+      project: {
+        ...state.project,
+        export: {
+          ...state.project.export,
+          formatId: preset.formatId,
+          resolution: format.resolution,
+          fps: preset.fps,
+          format: preset.format,
+          transparent: preset.transparent,
+        },
+      },
+      playerKey: state.playerKey + 1,
+    }));
+  },
+
   setPreviewBackground: (mode) => set({ previewBackground: mode }),
 
   setCustomBackground: (color) => set({ customBackground: color }),
+
+  setShowSafeAreaGuides: (show) => set({ showSafeAreaGuides: show }),
+
+  setPlatformFilter: (filter) => set({ platformFilter: filter }),
 
   loadProject: (project) =>
     set({
       project: {
         ...project,
         fields: { ...getDefaultFields(project.template), ...project.fields },
+        placement: project.placement ?? getDefaultPlacement(project.template),
+        export: {
+          ...createDefaultProject(project.template).export,
+          ...project.export,
+        },
       },
       playerKey: get().playerKey + 1,
     }),

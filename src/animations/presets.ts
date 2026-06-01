@@ -27,6 +27,7 @@ export interface MotionStyle {
   transform?: string;
   width?: string | number;
   scaleX?: number;
+  filter?: string;
 }
 
 export function slideUp(time: number, delay = 0, duration = 0.4, globalSpeed = 1, distance = 18): MotionStyle {
@@ -116,14 +117,73 @@ export function counterUp(time: number, delay = 0, duration = 1.8, globalSpeed =
   return Math.round(p * target);
 }
 
+export function slideDown(time: number, delay = 0, duration = 0.4, globalSpeed = 1, distance = 18): MotionStyle {
+  const p = getLocalProgress(time, delay, duration, globalSpeed);
+  return {
+    opacity: p,
+    transform: `translateY(${(p - 1) * distance}px)`,
+  };
+}
+
+export function slideInLeft(time: number, delay = 0, duration = 0.45, globalSpeed = 1, distance = 40): MotionStyle {
+  const p = getLocalProgress(time, delay, duration, globalSpeed);
+  return {
+    opacity: p,
+    transform: `translateX(${(p - 1) * distance}px)`,
+  };
+}
+
+export function slideInRight(time: number, delay = 0, duration = 0.45, globalSpeed = 1, distance = 40): MotionStyle {
+  const p = getLocalProgress(time, delay, duration, globalSpeed);
+  return {
+    opacity: p,
+    transform: `translateX(${(1 - p) * distance}px)`,
+  };
+}
+
+export function starPop(time: number, index: number, baseDelay = 0.12, step = 0.12, globalSpeed = 1): MotionStyle {
+  return popIn(time, baseDelay + index * step, 0.35, globalSpeed);
+}
+
+export function impactZoom(time: number, delay = 0, duration = 0.6, globalSpeed = 1): MotionStyle {
+  const p = getLocalProgress(time, delay, duration, globalSpeed);
+  const scale = 1.35 - p * 0.35;
+  const blur = 8 * (1 - p);
+  return {
+    opacity: p,
+    transform: `scale(${scale})`,
+    filter: `blur(${blur}px)`,
+  };
+}
+
+export function shake(time: number, delay = 0, duration = 0.5, globalSpeed = 1, amplitude = 10): MotionStyle {
+  const raw = clamp((time * globalSpeed - delay) / duration, 0, 1);
+  if (raw <= 0) return { opacity: 0, transform: 'translateX(0)' };
+  if (raw >= 1) return { opacity: 1, transform: 'translateX(0)' };
+  const x = amplitude * Math.sin(raw * Math.PI * 6) * (1 - raw);
+  return { opacity: 1, transform: `translateX(${x}px)` };
+}
+
+export function vignettePulse(time: number, delay = 0, duration = 0.3, globalSpeed = 1, target = 0.85): MotionStyle {
+  const p = getLocalProgress(time, delay, duration, globalSpeed);
+  return { opacity: p * target };
+}
+
+export function radarSweep(time: number, period = 2.0): MotionStyle {
+  const angle = ((time % period) / period) * 360;
+  return { transform: `rotate(${angle}deg)` };
+}
+
 export function applyMotionStyle(style: MotionStyle): CSSProperties {
   const css: CSSProperties = {};
   if (style.opacity !== undefined) css.opacity = style.opacity;
-  if (style.transform !== undefined) css.transform = style.transform;
+  if (style.filter !== undefined) css.filter = style.filter;
   if (style.width !== undefined) css.width = style.width;
   if (style.scaleX !== undefined) {
     css.transform = `scaleX(${style.scaleX})`;
     css.transformOrigin = 'left center';
+  } else if (style.transform !== undefined) {
+    css.transform = style.transform;
   }
   return css;
 }

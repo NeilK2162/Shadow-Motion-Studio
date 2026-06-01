@@ -2,20 +2,24 @@ import { Player } from '@remotion/player';
 import { RotateCcw } from 'lucide-react';
 import { TemplateComposition } from '@/remotion/TemplateComposition';
 import { projectToInputProps } from '@/remotion/inputProps';
+import { FORMAT_PRESETS } from '@/lib/formats';
 import { useEditorStore } from '@/store/editorStore';
 import { RESOLUTION_MAP } from '@/types';
 
 const PREVIEW_MAX_W = 880;
-const PREVIEW_MAX_H = 400;
+const PREVIEW_MAX_H = 480;
 
 export function Preview() {
   const project = useEditorStore((s) => s.project);
   const previewBackground = useEditorStore((s) => s.previewBackground);
   const customBackground = useEditorStore((s) => s.customBackground);
   const playerKey = useEditorStore((s) => s.playerKey);
+  const showSafeAreaGuides = useEditorStore((s) => s.showSafeAreaGuides);
   const replay = useEditorStore((s) => s.replay);
   const setPreviewBackground = useEditorStore((s) => s.setPreviewBackground);
   const setCustomBackground = useEditorStore((s) => s.setCustomBackground);
+  const setFormat = useEditorStore((s) => s.setFormat);
+  const setShowSafeAreaGuides = useEditorStore((s) => s.setShowSafeAreaGuides);
 
   const { width, height } = RESOLUTION_MAP[project.export.resolution];
   const layoutScale = Math.min(PREVIEW_MAX_W / width, PREVIEW_MAX_H / height, 1);
@@ -27,6 +31,7 @@ export function Preview() {
     backgroundMode: previewBackground,
     customBackground,
     resolution: project.export.resolution,
+    showSafeAreaGuides,
   };
 
   const stageBackground =
@@ -41,6 +46,17 @@ export function Preview() {
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div className="font-mono text-[9px] uppercase tracking-[2px] text-dim">Preview</div>
         <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={project.export.formatId ?? 'youtube-landscape'}
+            onChange={(e) => setFormat(e.target.value as (typeof FORMAT_PRESETS)[number]['id'])}
+            className="border border-dark5 bg-dark2 px-2 py-1 font-mono text-[9px] uppercase text-dim"
+          >
+            {FORMAT_PRESETS.map((f) => (
+              <option key={f.id} value={f.id}>
+                {f.label}
+              </option>
+            ))}
+          </select>
           <select
             value={previewBackground}
             onChange={(e) => setPreviewBackground(e.target.value as 'dark' | 'transparent' | 'custom')}
@@ -58,6 +74,10 @@ export function Preview() {
               className="h-7 w-10 border border-dark5 bg-dark2"
             />
           )}
+          <label className="flex items-center gap-1 font-mono text-[9px] uppercase text-dim">
+            <input type="checkbox" checked={showSafeAreaGuides} onChange={(e) => setShowSafeAreaGuides(e.target.checked)} />
+            Safe area
+          </label>
           <button
             type="button"
             onClick={replay}

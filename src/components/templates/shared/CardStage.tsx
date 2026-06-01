@@ -28,9 +28,7 @@ export function CardStage({
       style={{
         width,
         height,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        position: 'relative',
         overflow: 'hidden',
         ...bgStyle,
       }}

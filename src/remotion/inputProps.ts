@@ -1,4 +1,7 @@
 import { getDefaultDurationSeconds, getDefaultFields } from '@/data/templateDefaults';
+import { resolutionToFormatId, type FormatId } from '@/lib/formats';
+import { getDefaultPlacement } from '@/components/templates/shared/cardLayout';
+import type { Placement } from '@/lib/placement';
 import type { Project, TemplateId } from '@/types';
 import type { ThemeTokens } from '@/themes/tokens';
 import { shadowOwnerTheme } from '@/themes/tokens';
@@ -12,9 +15,15 @@ export interface CompositionInputProps extends Record<string, unknown> {
   backgroundMode: 'dark' | 'transparent' | 'custom';
   customBackground: string;
   resolution: Project['export']['resolution'];
+  formatId: FormatId;
+  placement: Placement;
+  showSafeAreaGuides?: boolean;
 }
 
 export function projectToInputProps(project: Project): CompositionInputProps {
+  const formatId = project.export.formatId ?? resolutionToFormatId(project.export.resolution);
+  const placement = project.placement ?? getDefaultPlacement(project.template);
+
   return {
     templateId: project.template,
     fields: project.fields,
@@ -24,6 +33,9 @@ export function projectToInputProps(project: Project): CompositionInputProps {
     backgroundMode: project.export.transparent ? 'transparent' : 'dark',
     customBackground: '#080808',
     resolution: project.export.resolution,
+    formatId,
+    placement,
+    showSafeAreaGuides: false,
   };
 }
 
@@ -37,6 +49,9 @@ export function createDefaultInputProps(template: TemplateId): CompositionInputP
     backgroundMode: 'dark',
     customBackground: '#080808',
     resolution: '1920x1080',
+    formatId: 'youtube-landscape',
+    placement: getDefaultPlacement(template),
+    showSafeAreaGuides: false,
   };
 }
 
@@ -59,6 +74,8 @@ export function createDefaultProject(template: TemplateId): Project {
       format: 'webm',
       transparent: true,
       stripCardBackground: false,
+      formatId: 'youtube-landscape',
     },
+    placement: getDefaultPlacement(template),
   };
 }
