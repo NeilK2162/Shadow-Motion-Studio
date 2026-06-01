@@ -7,3 +7,7 @@ exports
 .DS_Store
 *.local
 .env
+data/director.json
+data/voices.json
+data/series/
+*.key

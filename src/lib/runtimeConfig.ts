@@ -66,6 +66,18 @@ export function getAssetsDir(): string {
   return path.join(config.dataDir, 'assets');
 }
 
+export function getDirectorSettingsPath(): string {
+  return path.join(getDataFilesDir(), 'director.json');
+}
+
+export function getVoicesPath(): string {
+  return path.join(getDataFilesDir(), 'voices.json');
+}
+
+export function getSeriesDir(): string {
+  return path.join(getDataFilesDir(), 'series');
+}
+
 export function getServeUrl(): string | null {
   return config.serveUrl;
 }

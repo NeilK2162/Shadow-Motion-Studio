@@ -14,14 +14,17 @@
     "build:electron-main": "node scripts/build-electron-main.mjs",
     "app:build": "npm run build && npm run build:remotion && npm run build:electron-main",
     "app": "npm run app:build && electron dist-electron/main.cjs",
-    "package": "npm run app:build && electron-builder --win portable"
+    "package": "npm run app:build && electron-builder --win portable",
+    "test:director": "tsx --test src/director/**/*.test.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "@remotion/player": "^4.0.272",
     "@remotion/renderer": "^4.0.272",
-    "express": "^4.21.2",
     "cors": "^2.8.5",
+    "express": "^4.21.2",
     "lucide-react": "^0.469.0",
+    "openai": "^6.39.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.272",

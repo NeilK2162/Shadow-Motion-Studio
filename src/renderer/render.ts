@@ -227,8 +227,8 @@ function isBrowserError(error: unknown): boolean {
   );
 }
 
-export async function renderBatch(items: Partial<Project>[]): Promise<string> {
-  const folder = path.join(getExportsDir(), `batch-${Date.now()}`);
+export async function renderBatch(items: Partial<Project>[], outputFolder?: string): Promise<string> {
+  const folder = outputFolder ?? path.join(getExportsDir(), `batch-${Date.now()}`);
   await fs.mkdir(folder, { recursive: true });
 
   for (let i = 0; i < items.length; i++) {
