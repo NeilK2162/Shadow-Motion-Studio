@@ -275,7 +275,7 @@ export async function startServer(options: StartServerOptions = {}): Promise<Run
 
   const port = options.port ?? 3456;
 
-  return new Promise<RunningServer>((resolve) => {
+  return new Promise<RunningServer>((resolve, reject) => {
     const server = app.listen(port, () => {
       const address = server.address();
       const actualPort = typeof address === 'object' && address ? address.port : port;
@@ -291,6 +291,18 @@ export async function startServer(options: StartServerOptions = {}): Promise<Run
             void closeRenderer().finally(() => server.close((err) => (err ? rej(err) : res())));
           }),
       });
+    });
+
+    server.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EADDRINUSE') {
+        reject(
+          new Error(
+            `Port ${port} is already in use. Close the other Shadow Motion Studio server or run only \`npm run dev\` (not both dev and server separately).`,
+          ),
+        );
+        return;
+      }
+      reject(err);
     });
   });
 }
