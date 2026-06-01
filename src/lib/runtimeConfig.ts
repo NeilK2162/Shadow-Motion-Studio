@@ -82,6 +82,14 @@ export function getDirectorPacksDir(): string {
   return path.join(getDataFilesDir(), 'director-packs');
 }
 
+export function getCustomTemplatesDir(): string {
+  return path.join(getDataFilesDir(), 'templates', 'custom');
+}
+
+export function getTemplatesIndexPath(): string {
+  return path.join(getDataFilesDir(), 'templates', 'index.json');
+}
+
 export function getServeUrl(): string | null {
   return config.serveUrl;
 }

@@ -11,7 +11,7 @@ export function localDraft(
   beats: Beat[],
   memory: SeriesMemory,
   _voice: VoiceProfile,
-): Array<{ template: TemplateId; fields: Record<string, unknown> }> {
+): Array<{ template: string; fields: Record<string, unknown> }> {
   const ep = memory.episode;
   const week = memory.facts.weekNumber ?? ep;
   const users = (memory.facts.shadowUsers ?? 23) + 8;
@@ -19,7 +19,7 @@ export function localDraft(
 
   return beats.map((beat) => ({
     template: beat.template,
-    fields: mergeWithDefaults(beat.template, fillTemplate(beat.template, beat.intent, ep, week, users, respect, memory)),
+    fields: mergeWithDefaults(beat.template as TemplateId, fillTemplate(beat.template as TemplateId, beat.intent, ep, week, users, respect, memory)),
   }));
 }
 

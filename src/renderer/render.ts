@@ -3,7 +3,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
 import { openBrowser, renderMedia, renderStill, type HeadlessBrowser } from '@remotion/renderer';
-import { createDefaultProject, projectToInputProps } from '../remotion/inputProps';
+import { createDefaultProject, DYNAMIC_TEMPLATE_COMPOSITION_ID, projectToInputProps } from '../remotion/inputProps';
+import { fieldsFromDef } from '../director/templateUtils';
 import { getFormat } from '../lib/formats';
 import type { Project, TemplateId } from '../types';
 import { RESOLUTION_MAP } from '../types';
@@ -85,7 +86,7 @@ export async function closeRenderer(): Promise<void> {
  * Safe because our compositions have static metadata (no calculateMetadata).
  */
 function buildComposition(
-  templateId: TemplateId,
+  compositionId: string,
   inputProps: Record<string, unknown>,
   width: number,
   height: number,
@@ -93,7 +94,7 @@ function buildComposition(
   fps: number,
 ) {
   return {
-    id: templateId,
+    id: compositionId,
     width,
     height,
     fps,
@@ -111,12 +112,29 @@ function buildComposition(
 
 function mergeProject(partial: Partial<Project>): Project {
   const template = partial.template ?? 'mission-passed';
-  const base = createDefaultProject(template);
+
+  if (partial.templateDef) {
+    const base = createDefaultProject(partial.templateDef.id, partial.templateDef);
+    return {
+      ...base,
+      ...partial,
+      template: partial.templateDef.id,
+      templateDef: partial.templateDef,
+      fields: { ...fieldsFromDef(partial.templateDef), ...partial.fields },
+      theme: { ...base.theme, ...partial.theme },
+      animation: { ...base.animation, ...partial.animation },
+      export: { ...base.export, ...partial.export },
+      placement: partial.placement ?? partial.templateDef.defaultPlacement,
+    };
+  }
+
+  const builtIn = template as TemplateId;
+  const base = createDefaultProject(builtIn);
   return {
     ...base,
     ...partial,
-    template,
-    fields: { ...getDefaultFields(template), ...partial.fields },
+    template: builtIn,
+    fields: { ...getDefaultFields(builtIn), ...partial.fields },
     theme: { ...base.theme, ...partial.theme },
     animation: { ...base.animation, ...partial.animation },
     export: { ...base.export, ...partial.export },
@@ -147,7 +165,7 @@ function formatSuffix(project: Project): string {
 export async function renderProject(project: Project, outputDir?: string): Promise<string> {
   const serveUrl = await getBundle();
   const inputProps = projectToInputProps(project);
-  const compositionId = project.template;
+  const compositionId = project.templateDef ? DYNAMIC_TEMPLATE_COMPOSITION_ID : project.template;
   const binariesDirectory = getBinariesDirectory();
 
   const { width, height } = RESOLUTION_MAP[project.export.resolution];

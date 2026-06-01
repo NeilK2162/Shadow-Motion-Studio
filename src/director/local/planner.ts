@@ -53,7 +53,7 @@ export function localPlan(concept: string, formatTarget: DirectorFormatTarget, m
     .filter((s) => s.score > 0)
     .sort((a, b) => b.score - a.score);
 
-  const used = new Set<TemplateId>(beats.map((b) => b.template));
+  const used = new Set<string>(beats.map((b) => b.template));
 
   for (const { rule } of scored) {
     if (used.has(rule.template)) continue;

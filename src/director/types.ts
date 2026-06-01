@@ -1,5 +1,6 @@
 import type { FormatId } from '../lib/formats';
-import type { ExportConfig, TemplateId } from '../types';
+import type { ExportConfig } from '../types';
+import type { TemplateDefinition } from './templateSchema';
 
 export type DirectorProvider = 'openai' | 'anthropic' | 'local' | 'mock';
 
@@ -9,17 +10,20 @@ export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
   cachedInputTokens: number;
+  cacheWriteTokens: number;
   estimatedCostUsd: number;
 }
 
 export interface StepUsage {
-  step: 'plan' | 'draft' | 'repair';
+  step: 'plan' | 'draft' | 'repair' | 'create' | 'create_repair';
   usage: TokenUsage;
 }
 
 export interface Beat {
-  template: TemplateId;
+  template: string;
   intent: string;
+  mode?: 'reuse' | 'create';
+  customName?: string;
 }
 
 export interface DirectorPlan {
@@ -28,8 +32,10 @@ export interface DirectorPlan {
 }
 
 export interface GeneratedAsset {
-  template: TemplateId;
+  template: string;
   fields: Record<string, unknown>;
+  isCustom?: boolean;
+  templateDef?: TemplateDefinition;
   formatId?: FormatId;
   export?: Partial<ExportConfig>;
   valid: boolean;

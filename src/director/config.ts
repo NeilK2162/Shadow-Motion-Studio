@@ -16,4 +16,6 @@ export const TOKEN_LIMITS = {
   plan: 300,
   draft: 1600,
   repair: 500,
+  create: 4096,
+  createRepair: 4096,
 } as const;

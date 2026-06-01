@@ -22,7 +22,7 @@ describe('Director foundation', () => {
     const provider = getProvider({ ...settings, provider: 'mock' });
     assert.ok(provider);
 
-    const schemas = getSchemasForTemplates(plan.beats.map((b) => b.template));
+    const schemas = getSchemasForTemplates(plan.beats.map((b) => b.template as import('../types').TemplateId));
     const { data } = await provider.complete<Array<{ template: string; fields: Record<string, unknown> }>>({
       system: 'draft',
       user: `BEATS: ${JSON.stringify(plan.beats)}\nSCHEMAS:\n${serializeSchemasForPrompt(schemas)}`,

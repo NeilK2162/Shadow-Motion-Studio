@@ -1,7 +1,6 @@
 import { Player } from '@remotion/player';
 import { ExternalLink } from 'lucide-react';
-import { createDefaultProject } from '@/remotion/inputProps';
-import { projectToInputProps } from '@/remotion/inputProps';
+import { createDefaultProject, projectToInputProps } from '@/remotion/inputProps';
 import { TemplateComposition } from '@/remotion/TemplateComposition';
 import type { GeneratedAsset } from '@/director/types';
 import { getTemplateMeta, RESOLUTION_MAP } from '@/types';
@@ -10,8 +9,10 @@ import type { Project } from '@/types';
 const THUMB_MAX = 200;
 
 function assetToProject(asset: GeneratedAsset): Project {
-  const base = createDefaultProject(asset.template);
-  return { ...base, fields: asset.fields };
+  if (asset.templateDef) {
+    return { ...createDefaultProject(asset.templateDef.id, asset.templateDef), fields: asset.fields };
+  }
+  return { ...createDefaultProject(asset.template as import('@/types').TemplateId), fields: asset.fields };
 }
 
 interface AssetGridProps {
@@ -26,7 +27,22 @@ export function AssetGrid({ assets, onOpenInEditor }: AssetGridProps) {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {assets.map((asset, i) => {
           const project = assetToProject(asset);
-          const meta = getTemplateMeta(asset.template);
+          let glyph = '✦';
+          let label = asset.template;
+          try {
+            if (!asset.isCustom) {
+              const meta = getTemplateMeta(asset.template as Parameters<typeof getTemplateMeta>[0]);
+              glyph = meta.glyph;
+              label = meta.label;
+            } else {
+              glyph = asset.templateDef?.glyph ?? '✦';
+              label = asset.templateDef?.name ?? asset.template;
+            }
+          } catch {
+            glyph = asset.templateDef?.glyph ?? '✦';
+            label = asset.templateDef?.name ?? asset.template;
+          }
+
           const { width, height } = RESOLUTION_MAP[project.export.resolution];
           const scale = Math.min(THUMB_MAX / width, THUMB_MAX / height, 1);
           const displayW = Math.round(width * scale);
@@ -37,7 +53,10 @@ export function AssetGrid({ assets, onOpenInEditor }: AssetGridProps) {
             <div key={i} className="border border-dark4 bg-dark0 p-2">
               <div className="mb-2 flex items-center justify-between font-mono text-[9px] uppercase text-dim">
                 <span>
-                  {meta.glyph} {asset.template}
+                  {glyph} {label}
+                  {asset.isCustom && (
+                    <span className="ml-1 rounded border border-gold/30 px-1 text-[7px] text-gold">custom</span>
+                  )}
                 </span>
                 {!asset.valid && <span className="text-red">invalid</span>}
               </div>

@@ -1,5 +1,6 @@
 import { CardStage } from '@/components/templates/shared/CardStage';
 import { Stage } from '@/components/templates/shared/Stage';
+import { DynamicTemplate } from '@/components/templates/DynamicTemplate';
 import { TEMPLATE_COMPONENTS } from '@/components/templates';
 import { TemplateLayoutContext } from '@/hooks/useCardLayout';
 import { getFormat } from '@/lib/formats';
@@ -13,6 +14,7 @@ export type TemplateCompositionProps = CompositionInputProps;
 export function TemplateComposition(props: TemplateCompositionProps) {
   const {
     templateId,
+    templateDef,
     fields,
     theme,
     globalSpeed = 1,
@@ -25,7 +27,6 @@ export function TemplateComposition(props: TemplateCompositionProps) {
     showSafeAreaGuides = false,
   } = props;
 
-  const Component = TEMPLATE_COMPONENTS[templateId as TemplateId];
   const { width, height } = RESOLUTION_MAP[resolution];
   const format = getFormat(formatId);
 
@@ -35,6 +36,9 @@ export function TemplateComposition(props: TemplateCompositionProps) {
     canvasHeight: height,
     formatId,
   };
+
+  const useDynamic = !!templateDef || !(templateId in TEMPLATE_COMPONENTS);
+  const Component = !useDynamic ? TEMPLATE_COMPONENTS[templateId as TemplateId] : null;
 
   return (
     <CardStage width={width} height={height} backgroundMode={backgroundMode} customBackground={customBackground}>
@@ -50,16 +54,30 @@ export function TemplateComposition(props: TemplateCompositionProps) {
                 : undefined
             }
           >
-            <Component
-              fields={fields}
-              theme={theme}
-              globalSpeed={globalSpeed}
-              stripCardBackground={stripCardBackground}
-              formatId={formatId}
-              placement={placement}
-              canvasWidth={width}
-              canvasHeight={height}
-            />
+            {useDynamic && templateDef ? (
+              <DynamicTemplate
+                def={templateDef}
+                fields={fields}
+                theme={theme}
+                globalSpeed={globalSpeed}
+                stripCardBackground={stripCardBackground}
+                formatId={formatId}
+                placement={placement}
+                canvasWidth={width}
+                canvasHeight={height}
+              />
+            ) : Component ? (
+              <Component
+                fields={fields}
+                theme={theme}
+                globalSpeed={globalSpeed}
+                stripCardBackground={stripCardBackground}
+                formatId={formatId}
+                placement={placement}
+                canvasWidth={width}
+                canvasHeight={height}
+              />
+            ) : null}
           </div>
         </Stage>
       </TemplateLayoutContext.Provider>

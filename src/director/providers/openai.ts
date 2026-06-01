@@ -47,7 +47,8 @@ export class OpenAIProvider implements LLMProvider {
         inputTokens,
         outputTokens,
         cachedInputTokens,
-        estimatedCostUsd: estimateCost(model, inputTokens, outputTokens, cachedInputTokens),
+        cacheWriteTokens: 0,
+        estimatedCostUsd: estimateCost(model, inputTokens, outputTokens, cachedInputTokens, 0),
       },
     };
   }

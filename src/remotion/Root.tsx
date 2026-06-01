@@ -1,7 +1,8 @@
 import { Composition } from 'remotion';
-import { createDefaultInputProps } from './inputProps';
+import { createDefaultInputProps, DYNAMIC_TEMPLATE_COMPOSITION_ID } from './inputProps';
 import { TEMPLATE_META } from '@/types';
 import { getDefaultDurationSeconds } from '@/data/templateDefaults';
+import { SAMPLE_MISSION_PASSED_DEF } from '@/director/templateSchema';
 import { TemplateComposition } from './TemplateComposition';
 
 function durationForTemplate(templateId: (typeof TEMPLATE_META)[number]['id'], fps = 30): number {
@@ -23,6 +24,15 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={createDefaultInputProps(meta.id)}
         />
       ))}
+      <Composition
+        id={DYNAMIC_TEMPLATE_COMPOSITION_ID}
+        component={TemplateComposition}
+        durationInFrames={Math.ceil((SAMPLE_MISSION_PASSED_DEF.durationSeconds + 1) * 30)}
+        fps={30}
+        width={1920}
+        height={1080}
+        defaultProps={createDefaultInputProps('mission-passed', SAMPLE_MISSION_PASSED_DEF)}
+      />
     </>
   );
 };

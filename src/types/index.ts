@@ -1,6 +1,7 @@
 import type { ThemeTokens } from '@/themes/tokens';
 import type { FormatId } from '@/lib/formats';
 import type { Placement } from '@/lib/placement';
+import type { TemplateDefinition } from '@/director/templateSchema';
 
 export type TemplateId =
   | 'mission-passed'
@@ -73,12 +74,25 @@ export interface ExportConfig {
 }
 
 export interface Project {
-  template: TemplateId;
+  template: string;
+  templateDef?: TemplateDefinition;
   fields: Record<string, unknown>;
   theme: ThemeTokens;
   animation: AnimationConfig;
   export: ExportConfig;
   placement?: Placement;
+}
+
+export interface CustomTemplateMeta {
+  id: string;
+  glyph: string;
+  label: string;
+  group: TemplateGroup;
+  defaultDurationSeconds: number;
+  compositionWidth: number;
+  compositionHeight: number;
+  isCustom: true;
+  recommendedFormats: FormatId[];
 }
 
 export interface TemplateMeta {

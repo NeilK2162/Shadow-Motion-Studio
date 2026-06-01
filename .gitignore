@@ -11,4 +11,5 @@ data/director.json
 data/voices.json
 data/series/
 data/director-packs/
+data/templates/custom/
 *.key

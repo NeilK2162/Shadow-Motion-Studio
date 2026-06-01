@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Download, FolderOpen, Save, Upload } from 'lucide-react';
 import { DEFAULT_LAYOUT_FIELDS, getCardLayout, getDefaultPlacement, LAYOUT_FIELD_KEYS } from '@/components/templates/shared/cardLayout';
+import { getDynamicCardLayout } from '@/components/templates/shared/primitives/dynamicLayout';
 import { PLATFORM_EXPORT_PRESETS } from '@/lib/formats';
 import { PLACEMENT_OPTIONS } from '@/lib/placement';
 import { TEMPLATE_DEFAULTS } from '@/data/templateDefaults';
 import { useEditorStore } from '@/store/editorStore';
-import type { Project, PollOption, StatBar, StatBox, StatField, StatusBar } from '@/types';
+import type { Project, PollOption, StatBar, StatBox, StatField, StatusBar, TemplateId } from '@/types';
 import { RESOLUTION_MAP } from '@/types';
 
 const LAYOUT_FIELD_KEYS_SET = LAYOUT_FIELD_KEYS;
@@ -88,7 +89,20 @@ export function Properties() {
   const fields = project.fields;
 
   const renderTextFields = () => {
-    const defaults = TEMPLATE_DEFAULTS[project.template].fields;
+    if (project.templateDef) {
+      return project.templateDef.fields
+        .filter((f) => f.type === 'text' || f.type === 'number' || f.type === 'boolean')
+        .map((f) => (
+          <TextField
+            key={f.key}
+            label={f.label}
+            value={String(fields[f.key] ?? f.default ?? '')}
+            onChange={(v) => setField(f.key, f.type === 'number' ? Number(v) : v)}
+          />
+        ));
+    }
+
+    const defaults = TEMPLATE_DEFAULTS[project.template as TemplateId].fields;
     return Object.entries(defaults)
       .filter(([key, value]) => (typeof value === 'string' || typeof value === 'number') && !LAYOUT_FIELD_KEYS_SET.has(key))
       .map(([key, defaultValue]) => (
@@ -103,13 +117,21 @@ export function Properties() {
 
   const renderLayoutFields = () => {
     const d = DEFAULT_LAYOUT_FIELDS;
-    const layout = getCardLayout(project.template, fields, project.export.formatId, {
-      placement: project.placement ?? getDefaultPlacement(project.template),
-      canvasWidth: RESOLUTION_MAP[project.export.resolution].width,
-      canvasHeight: RESOLUTION_MAP[project.export.resolution].height,
-    });
+    const layout = project.templateDef
+      ? getDynamicCardLayout(project.templateDef, fields, project.export.formatId, {
+          placement: project.placement ?? project.templateDef.defaultPlacement,
+          canvasWidth: RESOLUTION_MAP[project.export.resolution].width,
+          canvasHeight: RESOLUTION_MAP[project.export.resolution].height,
+        })
+      : getCardLayout(project.template as TemplateId, fields, project.export.formatId, {
+          placement: project.placement ?? getDefaultPlacement(project.template as TemplateId),
+          canvasWidth: RESOLUTION_MAP[project.export.resolution].width,
+          canvasHeight: RESOLUTION_MAP[project.export.resolution].height,
+        });
     const hasGlow = layout.hasGlow;
-    const placement = project.placement ?? getDefaultPlacement(project.template);
+    const placement =
+      project.placement ??
+      (project.templateDef ? project.templateDef.defaultPlacement : getDefaultPlacement(project.template as TemplateId));
 
     return (
       <>

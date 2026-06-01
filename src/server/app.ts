@@ -9,12 +9,20 @@ import { builtInThemes } from '../themes/tokens';
 import {
   configureRuntime,
   getAssetsDir,
+  getCustomTemplatesDir,
   getDataFilesDir,
   getProjectsDir,
   getExportsDir,
   getSeriesDir,
   getDirectorPacksDir,
 } from '../lib/runtimeConfig';
+import {
+  deleteCustomTemplate,
+  importCustomTemplate,
+  listCustomTemplates,
+  loadCustomTemplate,
+  saveCustomTemplate,
+} from '../director/templateRegistry';
 import {
   generatePack,
   getSessionUsage,
@@ -53,6 +61,7 @@ async function ensureDirs(): Promise<void> {
   await fs.mkdir(getAssetsDir(), { recursive: true });
   await fs.mkdir(getSeriesDir(), { recursive: true });
   await fs.mkdir(getDirectorPacksDir(), { recursive: true });
+  await fs.mkdir(getCustomTemplatesDir(), { recursive: true });
 }
 
 export async function startServer(options: StartServerOptions = {}): Promise<RunningServer> {
@@ -205,6 +214,69 @@ export async function startServer(options: StartServerOptions = {}): Promise<Run
   app.post('/api/director/usage/reset', async (_req, res) => {
     resetSessionUsage();
     res.json({ ok: true, usage: getSessionUsage() });
+  });
+
+  app.get('/api/templates', async (_req, res) => {
+    try {
+      const templates = await listCustomTemplates();
+      res.json({ ok: true, templates });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.get('/api/templates/load', async (req, res) => {
+    try {
+      const id = String(req.query.id ?? '');
+      const def = await loadCustomTemplate(id);
+      if (!def) {
+        res.status(404).json({ ok: false, error: 'Template not found' });
+        return;
+      }
+      res.json({ ok: true, def });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.post('/api/templates', async (req, res) => {
+    try {
+      const def = req.body;
+      const result = await saveCustomTemplate(def);
+      if (!result.ok) {
+        res.status(400).json(result);
+        return;
+      }
+      res.json({ ok: true });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.delete('/api/templates/:id', async (req, res) => {
+    try {
+      const ok = await deleteCustomTemplate(req.params.id);
+      if (!ok) {
+        res.status(404).json({ ok: false, error: 'Template not found' });
+        return;
+      }
+      res.json({ ok: true });
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
+  });
+
+  app.post('/api/templates/import', async (req, res) => {
+    try {
+      const result = await importCustomTemplate(req.body);
+      if (!result.ok) {
+        res.status(400).json(result);
+        return;
+      }
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ ok: false, error: String(error) });
+    }
   });
 
   app.post('/api/projects/save', async (req, res) => {

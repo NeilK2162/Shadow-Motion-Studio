@@ -1,10 +1,16 @@
 import type { TokenUsage } from '../types';
 
+export interface SystemBlock {
+  text: string;
+  cacheBreakpoint?: boolean;
+}
+
 export interface LLMCompleteArgs {
   system: string;
   user: string;
   maxTokens: number;
   cacheableSystem?: boolean;
+  systemBlocks?: SystemBlock[];
   model?: string;
 }
 

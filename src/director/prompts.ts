@@ -2,16 +2,22 @@ import { serializeRegistry } from './registry';
 import type { DirectorFormatTarget, VoiceProfile } from './types';
 
 export const PLANNER_SYSTEM = `You are The Director, a motion-graphics show-runner for a creator's video series.
-Given a video concept, choose 3 to 7 narrative beats from the template registry.
-Each beat = one template id + a one-line intent.
+Given a video concept, choose 3 to 7 narrative beats.
+Each beat = one template + a one-line intent + mode reuse or create.
+
+For each beat:
+- mode "reuse" + template id from the built-in registry when an existing template fits well
+- mode "create" + customName when NO built-in fits the beat (unique visual need)
+Do NOT create duplicates of existing built-in purposes. Prefer reuse when possible.
+
 Open with chapter-card if the concept implies a new episode/section.
 End with subscribe-prompt only for YouTube concepts.
-Maintain series continuity using the provided SERIES CONTEXT.
-Match the creator's VOICE.
-Output ONLY JSON: { "beats": [{ "template": "<id>", "intent": "<line>" }] }
-Use only ids from the registry. No prose. No markdown.
+Maintain series continuity using SERIES CONTEXT. Match VOICE.
 
-TEMPLATE REGISTRY:
+Output ONLY JSON:
+{ "beats": [{ "template": "<id or slug>", "intent": "<line>", "mode": "reuse"|"create", "customName": "<when create>" }] }
+
+BUILT-IN REGISTRY:
 ${serializeRegistry()}`;
 
 export const DRAFTER_SYSTEM = `You are The Director's copywriter. For each beat, fill every field of its template

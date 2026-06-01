@@ -1,10 +1,13 @@
 import type { TemplateId } from '../types';
+import { TEMPLATE_META } from '../types';
 import { getTemplateSchema, mergeWithDefaults } from './schemas';
 import type { Beat, GeneratedAsset } from './types';
 
+const BUILT_IN_IDS = new Set(TEMPLATE_META.map((t) => t.id));
+
 export interface ValidationError {
   index: number;
-  template: TemplateId;
+  template: string;
   field?: string;
   message: string;
 }
@@ -36,10 +39,21 @@ export function validateDraftEntries(
   const errors: ValidationError[] = [];
 
   entries.forEach((entry, index) => {
-    const template = entry.template as TemplateId;
-    const schema = getTemplateSchema(template);
+    const template = entry.template;
 
-    const fields = mergeWithDefaults(template, entry.fields ?? {});
+    if (!BUILT_IN_IDS.has(template as TemplateId)) {
+      assets.push({
+        template,
+        fields: entry.fields ?? {},
+        valid: true,
+      });
+      return;
+    }
+
+    const builtIn = template as TemplateId;
+    const schema = getTemplateSchema(builtIn);
+
+    const fields = mergeWithDefaults(builtIn, entry.fields ?? {});
     const fieldErrors: string[] = [];
 
     for (const field of schema.contentFields) {
@@ -48,7 +62,7 @@ export function validateDraftEntries(
     }
 
     const asset: GeneratedAsset = {
-      template,
+      template: builtIn,
       fields,
       valid: fieldErrors.length === 0,
       errors: fieldErrors.length > 0 ? fieldErrors : undefined,
@@ -56,7 +70,7 @@ export function validateDraftEntries(
     assets.push(asset);
 
     fieldErrors.forEach((msg) => {
-      errors.push({ index, template, message: msg });
+      errors.push({ index, template: builtIn, message: msg });
     });
   });
 
@@ -66,9 +80,10 @@ export function validateDraftEntries(
 export function applyDefaultFill(assets: GeneratedAsset[]): GeneratedAsset[] {
   return assets.map((asset) => {
     if (asset.valid) return asset;
+    if (!BUILT_IN_IDS.has(asset.template as TemplateId)) return { ...asset, valid: true, errors: undefined };
     return {
       ...asset,
-      fields: mergeWithDefaults(asset.template, asset.fields),
+      fields: mergeWithDefaults(asset.template as TemplateId, asset.fields),
       valid: true,
       errors: undefined,
     };

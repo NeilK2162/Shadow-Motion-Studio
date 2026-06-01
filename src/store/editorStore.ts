@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { getDefaultDurationSeconds, getDefaultFields } from '@/data/templateDefaults';
+import type { TemplateDefinition } from '@/director/templateSchema';
+import { fieldsFromDef } from '@/director/templateUtils';
 import { getDefaultPlacement } from '@/components/templates/shared/cardLayout';
 import { getFormat, PLATFORM_EXPORT_PRESETS, type FormatId } from '@/lib/formats';
 import type { Placement } from '@/lib/placement';
@@ -15,6 +17,7 @@ interface EditorState {
   showSafeAreaGuides: boolean;
   platformFilter: 'all' | 'youtube' | 'reels' | 'feed';
   setTemplate: (template: TemplateId) => void;
+  loadCustomTemplate: (def: TemplateDefinition) => void;
   setField: (key: string, value: unknown) => void;
   setFields: (fields: Record<string, unknown>) => void;
   setThemeName: (name: string) => void;
@@ -37,8 +40,11 @@ interface EditorState {
   replay: () => void;
 }
 
-function durationFrames(template: TemplateId, fields: Record<string, unknown>, fps: number): number {
-  return Math.ceil((getDefaultDurationSeconds(template, fields) + 1) * fps);
+function durationFrames(template: string, fields: Record<string, unknown>, fps: number, templateDef?: TemplateDefinition): number {
+  if (templateDef) {
+    return Math.ceil((templateDef.durationSeconds + 1) * fps);
+  }
+  return Math.ceil((getDefaultDurationSeconds(template as TemplateId, fields) + 1) * fps);
 }
 
 export const useEditorStore = create<EditorState>((set, get) => ({
@@ -55,6 +61,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     set({
       project: {
         ...createDefaultProject(template),
+        templateDef: undefined,
         theme: get().project.theme,
         export: {
           ...get().project.export,
@@ -64,6 +71,25 @@ export const useEditorStore = create<EditorState>((set, get) => ({
         animation: {
           globalSpeed: 1,
           durationInFrames: durationFrames(template, fields, fps),
+        },
+      },
+      playerKey: get().playerKey + 1,
+    });
+  },
+
+  loadCustomTemplate: (def) => {
+    const fps = get().project.export.fps;
+    set({
+      project: {
+        ...createDefaultProject(def.id, def),
+        theme: get().project.theme,
+        export: {
+          ...get().project.export,
+          formatId: get().project.export.formatId ?? 'youtube-landscape',
+        },
+        animation: {
+          globalSpeed: 1,
+          durationInFrames: durationFrames(def.id, fieldsFromDef(def), fps, def),
         },
       },
       playerKey: get().playerKey + 1,
@@ -197,23 +223,32 @@ export const useEditorStore = create<EditorState>((set, get) => ({
 
   setPlatformFilter: (filter) => set({ platformFilter: filter }),
 
-  loadProject: (project) =>
+  loadProject: (project) => {
+    const template = project.template;
+    const baseFields = project.templateDef ? fieldsFromDef(project.templateDef) : getDefaultFields(template as TemplateId);
+    const placement =
+      project.placement ??
+      project.templateDef?.defaultPlacement ??
+      (project.templateDef ? 'center' : getDefaultPlacement(template as TemplateId));
     set({
       project: {
         ...project,
-        fields: { ...getDefaultFields(project.template), ...project.fields },
-        placement: project.placement ?? getDefaultPlacement(project.template),
+        fields: { ...baseFields, ...project.fields },
+        placement,
         export: {
-          ...createDefaultProject(project.template).export,
+          ...(project.templateDef ? createDefaultProject(project.templateDef.id, project.templateDef).export : createDefaultProject(template as TemplateId).export),
           ...project.export,
         },
       },
       playerKey: get().playerKey + 1,
-    }),
+    });
+  },
 
   resetProject: () =>
     set((state) => ({
-      project: createDefaultProject(state.project.template),
+      project: state.project.templateDef
+        ? createDefaultProject(state.project.templateDef.id, state.project.templateDef)
+        : createDefaultProject(state.project.template as TemplateId),
       playerKey: state.playerKey + 1,
     })),
 

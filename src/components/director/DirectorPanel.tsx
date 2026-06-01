@@ -7,8 +7,10 @@ import { useDirectorStore } from '@/store/directorStore';
 import { useEditorStore } from '@/store/editorStore';
 import { AssetGrid } from './AssetGrid';
 import { CostMeter } from './CostMeter';
+import { CreatePanel } from './CreatePanel';
 import { PlanView } from './PlanView';
 import { SeriesManager } from './SeriesManager';
+import { TemplateLibrary } from './TemplateLibrary';
 
 export function DirectorPanel() {
   const panelOpen = useDirectorStore((s) => s.panelOpen);
@@ -38,6 +40,7 @@ export function DirectorPanel() {
 
   const [apiKeyInput, setApiKeyInput] = useState('');
   const [seriesModalOpen, setSeriesModalOpen] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
   const [savedPacks, setSavedPacks] = useState<SavedPackMeta[]>([]);
 
   const loadMeta = useCallback(async () => {
@@ -317,6 +320,14 @@ export function DirectorPanel() {
             ✦ Generate pack
           </button>
 
+          <button
+            type="button"
+            onClick={() => setLibraryOpen(true)}
+            className="w-full border border-dark5 py-1.5 font-mono text-[9px] uppercase tracking-[1px] text-dim hover:border-gold-dim hover:text-gold"
+          >
+            Custom template library
+          </button>
+
           {statusMessage && (
             <p
               className={`font-mono text-[9px] ${status === 'error' || status === 'budget_paused' ? 'text-red' : 'text-dim'}`}
@@ -345,6 +356,7 @@ export function DirectorPanel() {
           {currentPack && (
             <>
               <PlanView plan={currentPack.plan} />
+              <CreatePanel plan={currentPack.plan} />
               <AssetGrid assets={currentPack.assets} onOpenInEditor={(p) => loadProject(p)} />
               {!dryRun && status === 'review' && (
                 <button
@@ -385,6 +397,8 @@ export function DirectorPanel() {
         onSelectSeries={setSeriesId}
         onSaveSeries={saveSeries}
       />
+
+      <TemplateLibrary open={libraryOpen} onClose={() => setLibraryOpen(false)} />
     </>
   );
 }

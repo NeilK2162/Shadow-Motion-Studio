@@ -32,7 +32,7 @@ describe('Director local path', () => {
       concept,
       plan,
       assets: validation.assets,
-      usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, estimatedCostUsd: 0 },
+      usage: { inputTokens: 0, outputTokens: 0, cachedInputTokens: 0, cacheWriteTokens: 0, estimatedCostUsd: 0 },
       stepUsage: [],
       formatTarget: 'both',
       createdAt: new Date().toISOString(),
