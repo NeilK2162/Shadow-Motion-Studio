@@ -3,16 +3,20 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "dist-electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "render": "tsx src/renderer/render-cli.ts",
-    "server": "tsx src/server/index.ts"
+    "server": "tsx src/server/index.ts",
+    "build:remotion": "tsx scripts/bundle-remotion.mjs",
+    "build:electron-main": "node scripts/build-electron-main.mjs",
+    "app:build": "npm run build && npm run build:remotion && npm run build:electron-main",
+    "app": "npm run app:build && electron dist-electron/main.cjs",
+    "package": "npm run app:build && electron-builder --win portable"
   },
   "dependencies": {
-    "@remotion/cli": "^4.0.272",
-    "@remotion/bundler": "^4.0.272",
     "@remotion/player": "^4.0.272",
     "@remotion/renderer": "^4.0.272",
     "express": "^4.21.2",
@@ -24,18 +28,54 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@types/express": "^5.0.0",
+    "@remotion/bundler": "^4.0.272",
+    "@remotion/cli": "^4.0.272",
     "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^18.3.5",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.20",
+    "electron": "^33.3.1",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.24.2",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
-    "tsx": "^4.19.2",
     "tsconfig-paths-webpack-plugin": "^4.2.0",
+    "tsx": "^4.19.2",
     "typescript": "~5.6.2",
     "vite": "^6.0.5"
+  },
+  "build": {
+    "appId": "com.shadowowner.motionstudio",
+    "productName": "Shadow Motion Studio",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist",
+        "to": "dist"
+      },
+      {
+        "from": "dist-remotion",
+        "to": "dist-remotion"
+      }
+    ],
+    "asarUnpack": [
+      "**/node_modules/@remotion/compositor-*/**"
+    ],
+    "win": {
+      "target": "portable",
+      "artifactName": "ShadowMotionStudio-${version}-portable.${ext}"
+    },
+    "portable": {
+      "artifactName": "ShadowMotionStudio-${version}-portable.${ext}"
+    }
   }
 }

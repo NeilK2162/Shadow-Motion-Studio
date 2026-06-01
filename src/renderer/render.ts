@@ -1,13 +1,12 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs/promises';
-import { bundle } from '@remotion/bundler';
 import { renderMedia, renderStill, selectComposition } from '@remotion/renderer';
-import { webpackOverride } from '../remotion/webpack-override';
 import { createDefaultProject, projectToInputProps } from '../remotion/inputProps';
 import type { Project } from '../types';
 import { RESOLUTION_MAP } from '../types';
 import { getDefaultFields } from '../data/templateDefaults';
+import { getExportsDir, getServeUrl } from '../lib/runtimeConfig';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '../..');
@@ -16,6 +15,17 @@ let bundleLocation: string | null = null;
 
 async function getBundle(): Promise<string> {
   if (bundleLocation) return bundleLocation;
+
+  // Production (packaged app): use the pre-built Remotion bundle, no webpack at runtime.
+  const prebuilt = getServeUrl();
+  if (prebuilt) {
+    bundleLocation = prebuilt;
+    return bundleLocation;
+  }
+
+  // Dev: bundle the compositions at runtime via webpack.
+  const { bundle } = await import('@remotion/bundler');
+  const { webpackOverride } = await import('../remotion/webpack-override');
   const entry = path.join(ROOT, 'src', 'remotion', 'index.ts');
   bundleLocation = await bundle({
     entryPoint: entry,
@@ -51,7 +61,7 @@ export async function renderProject(project: Project): Promise<string> {
     inputProps,
   });
 
-  const exportsDir = path.join(ROOT, 'exports');
+  const exportsDir = getExportsDir();
   await fs.mkdir(exportsDir, { recursive: true });
 
   const timestamp = Date.now();
@@ -95,7 +105,7 @@ export async function renderProject(project: Project): Promise<string> {
 }
 
 export async function renderBatch(items: Partial<Project>[]): Promise<string> {
-  const folder = path.join(ROOT, 'exports', `batch-${Date.now()}`);
+  const folder = path.join(getExportsDir(), `batch-${Date.now()}`);
   await fs.mkdir(folder, { recursive: true });
 
   for (let i = 0; i < items.length; i++) {
